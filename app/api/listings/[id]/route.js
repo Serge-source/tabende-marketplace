@@ -31,7 +31,8 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const formData = await request.formData();
-  const newImages = await saveMultipleFiles(formData, 'images');
+  let newImages = [];
+  try { newImages = await saveMultipleFiles(formData, 'images'); } catch (e) { console.warn('Image upload failed:', e.message); }
 
   const updated = await prisma.listing.update({
     where: { id: params.id },

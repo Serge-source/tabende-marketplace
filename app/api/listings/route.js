@@ -70,7 +70,8 @@ export async function POST(request) {
     if (!title || !description || !price || !category || !condition)
       return NextResponse.json({ error: 'Required fields missing' }, { status: 400 });
 
-    const images = await saveMultipleFiles(formData, 'images');
+    let images = [];
+    try { images = await saveMultipleFiles(formData, 'images'); } catch (e) { console.warn('Image upload failed, continuing without images:', e.message); }
 
     const listing = await prisma.listing.create({
       data: { title, description, price, category, condition, location, images, sellerId: user.id },
