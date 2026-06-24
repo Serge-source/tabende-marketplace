@@ -4,7 +4,9 @@ const nextConfig = {
     remotePatterns: [],
     unoptimized: true,
   },
-  // Allow serving uploads from /public
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
   async headers() {
     return [
       {
