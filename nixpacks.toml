@@ -1,0 +1,6 @@
+[phases.build]
+cmds = [
+  "npm install",
+  "npx prisma generate",
+  "DATABASE_URL='postgresql://placeholder:placeholder@localhost:5432/placeholder' npm run build"
+]
