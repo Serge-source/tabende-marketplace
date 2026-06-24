@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ListingCard from '@/components/ListingCard';
 
@@ -19,7 +19,7 @@ function Skeleton() {
   );
 }
 
-export default function BrowsePage() {
+function BrowseContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [listings, setListings] = useState([]);
@@ -171,4 +171,8 @@ export default function BrowsePage() {
       </div>
     </div>
   );
+}
+
+export default function BrowsePage() {
+  return <Suspense><BrowseContent /></Suspense>;
 }

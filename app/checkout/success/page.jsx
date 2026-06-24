@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const params = useSearchParams();
   const sessionId = params.get('session_id');
   const [order, setOrder] = useState(null);
@@ -57,4 +57,8 @@ export default function CheckoutSuccessPage() {
       </div>
     </div>
   );
+}
+
+export default function CheckoutSuccessPage() {
+  return <Suspense><CheckoutSuccessContent /></Suspense>;
 }
