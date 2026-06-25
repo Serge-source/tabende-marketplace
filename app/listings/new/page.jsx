@@ -5,18 +5,38 @@ import { useRouter } from 'next/navigation';
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
-const MAX_FILE_BYTES = 1.5 * 1024 * 1024; // 1.5MB per file
-
-// Read a file as a base64 data URL using FileReader (no canvas, universally supported).
-function readAsDataURL(file) {
+// Read file as data URL via FileReader, then compress via canvas to keep size small
+function processImage(file) {
   return new Promise((resolve, reject) => {
-    if (file.size > MAX_FILE_BYTES) {
-      reject(new Error(`"${file.name}" is too large (max 1.5MB). Please choose a smaller photo.`));
-      return;
-    }
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`Failed to read "${file.name}"`));
-    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(new Error(`Could not read "${file.name}"`));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => {
+        // Canvas failed — fall back to raw data URL
+        resolve(e.target.result);
+      };
+      img.onload = () => {
+        try {
+          const MAX = 800;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+            else { width = Math.round((width * MAX) / height); height = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+          // toDataURL returns 'data:,' if canvas is tainted — fall back to raw
+          resolve(compressed.length > 100 ? compressed : e.target.result);
+        } catch {
+          resolve(e.target.result);
+        }
+      };
+      img.src = e.target.result;
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -33,8 +53,9 @@ export default function NewListingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ title: '', description: '', price: '', category: '', condition: '', location: '' });
-  const [imageDataURLs, setImageDataURLs] = useState([]); // base64 strings for upload
-  const [previews, setPreviews] = useState([]);             // object URLs for display
+  const [imageDataURLs, setImageDataURLs] = useState([]);
+  const [previews, setPreviews] = useState([]);
+  const [imgStatus, setImgStatus] = useState(''); // debug status
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [compressing, setCompressing] = useState(false);
@@ -46,12 +67,16 @@ export default function NewListingPage() {
     setCompressing(true);
     setImageDataURLs([]);
     setPreviews([]);
+    setImgStatus(`Reading ${raw.length} file(s)...`);
     try {
-      const dataURLs = await Promise.all(raw.map(readAsDataURL));
+      const dataURLs = await Promise.all(raw.map(processImage));
       setImageDataURLs(dataURLs);
       setPreviews(dataURLs);
+      const totalKB = Math.round(dataURLs.reduce((s, d) => s + d.length, 0) / 1024);
+      setImgStatus(`${dataURLs.length} photo${dataURLs.length > 1 ? 's' : ''} ready (${totalKB} KB total)`);
     } catch (err) {
-      setError(err.message || 'Failed to process images. Try smaller files.');
+      setError(err.message || 'Failed to process images.');
+      setImgStatus('Error processing images');
     } finally {
       setCompressing(false);
     }
@@ -67,13 +92,23 @@ export default function NewListingPage() {
     setLoading(true);
     setError('');
     try {
+      const payload = { ...form, images: imageDataURLs };
+      const payloadKB = Math.round(JSON.stringify(payload).length / 1024);
+      console.log(`[publish] sending ${imageDataURLs.length} images, payload ${payloadKB} KB`);
+
       const res = await fetch('/api/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, images: imageDataURLs }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+
+      let data;
+      try { data = await res.json(); }
+      catch { throw new Error(`Server error (HTTP ${res.status})`); }
+
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+      console.log(`[publish] created listing ${data.id} with ${data.images?.length ?? 0} images`);
       router.push(`/listings/${data.id}`);
     } catch (err) {
       setError(err.message || 'Failed to create listing');
@@ -136,10 +171,20 @@ export default function NewListingPage() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                   {compressing ? 'Processing images...' : 'Upload up to 6 photos'}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{compressing ? 'Please wait' : 'PNG, JPG — max 1.5MB each, up to 6 photos'}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {compressing ? 'Please wait' : 'PNG, JPG, any size'}
+                </p>
               </div>
               <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} disabled={compressing} />
             </label>
+
+            {/* Debug status */}
+            {imgStatus && (
+              <p className={`text-xs font-medium text-center mt-3 ${imageDataURLs.length > 0 ? 'text-green-600' : 'text-orange-500'}`}>
+                {imgStatus}
+              </p>
+            )}
+
             {previews.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
                 {previews.map((src, i) => (
@@ -151,17 +196,12 @@ export default function NewListingPage() {
               </div>
             )}
           </div>
-          {imageDataURLs.length > 0 && (
-            <p className="text-xs text-green-600 font-medium text-center">
-              {imageDataURLs.length} photo{imageDataURLs.length > 1 ? 's' : ''} ready
-            </p>
-          )}
           <button
             onClick={() => setStep(2)}
             disabled={compressing}
             className="btn-primary w-full py-4 text-base font-bold rounded-2xl disabled:opacity-50"
           >
-            {compressing ? 'Processing photos...' : 'Continue to Details →'}
+            {compressing ? 'Processing...' : 'Continue to Details →'}
           </button>
         </div>
       )}
@@ -230,7 +270,13 @@ export default function NewListingPage() {
       {/* Step 3: Preview */}
       {step === 3 && (
         <div className="space-y-5">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Here's how your listing will appear to buyers:</p>
+          {/* Image status banner */}
+          <div className={`rounded-xl px-4 py-2.5 text-sm font-medium ${imageDataURLs.length > 0 ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
+            {imageDataURLs.length > 0
+              ? `✓ ${imageDataURLs.length} photo${imageDataURLs.length > 1 ? 's' : ''} ready to publish`
+              : '⚠ No photos — go back to Step 1 to add photos'}
+          </div>
+
           <div className="card overflow-hidden ring-2 ring-blue-200 dark:ring-blue-800">
             {previews.length > 0 ? (
               <div className="relative">
@@ -287,30 +333,25 @@ export default function NewListingPage() {
                   {form.description}
                 </p>
               )}
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                <p className="text-xs text-gray-400">
-            Preview only — buyers will see the full listing after publishing.
-            {imageDataURLs.length > 0
-              ? ` ${imageDataURLs.length} photo${imageDataURLs.length > 1 ? 's' : ''} will be included.`
-              : ' No photos selected — listing will publish without images.'}
-          </p>
-              </div>
             </div>
           </div>
 
           <div className="flex gap-3">
+            <button onClick={() => setStep(1)} className="btn-secondary flex-1 py-4 text-base font-bold rounded-2xl">
+              ← Edit Photos
+            </button>
             <button onClick={() => setStep(2)} className="btn-secondary flex-1 py-4 text-base font-bold rounded-2xl">
               ← Edit Details
             </button>
-            <button onClick={handlePublish} disabled={loading} className="btn-primary flex-grow py-4 text-base font-bold rounded-2xl">
-              {loading ? (
-                <span className="flex items-center gap-2 justify-center">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                  Publishing...
-                </span>
-              ) : 'Publish Listing'}
-            </button>
           </div>
+          <button onClick={handlePublish} disabled={loading} className="btn-primary w-full py-4 text-base font-bold rounded-2xl">
+            {loading ? (
+              <span className="flex items-center gap-2 justify-center">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                Publishing...
+              </span>
+            ) : 'Publish Listing'}
+          </button>
         </div>
       )}
     </div>

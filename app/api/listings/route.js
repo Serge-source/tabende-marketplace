@@ -67,7 +67,7 @@ export async function POST(request) {
 
     // images arrives as an array of base64 data URLs from the client
     const validImages = Array.isArray(images)
-      ? images.filter((img) => typeof img === 'string' && img.startsWith('data:image/'))
+      ? images.filter((img) => typeof img === 'string' && img.length > 10)
       : [];
 
     console.log(`[listings POST] creating listing with ${validImages.length} images`);
