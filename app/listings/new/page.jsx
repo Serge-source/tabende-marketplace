@@ -5,27 +5,19 @@ import { useRouter } from 'next/navigation';
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
-// Resize image to max 900px and return a base64 data URL ready for storage.
-function compressToDataURL(file) {
+const MAX_FILE_BYTES = 1.5 * 1024 * 1024; // 1.5MB per file
+
+// Read a file as a base64 data URL using FileReader (no canvas, universally supported).
+function readAsDataURL(file) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const MAX = 900;
-      let { width, height } = img;
-      if (width > MAX || height > MAX) {
-        if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
-        else { width = Math.round((width * MAX) / height); height = MAX; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.75));
-    };
-    img.src = url;
+    if (file.size > MAX_FILE_BYTES) {
+      reject(new Error(`"${file.name}" is too large (max 1.5MB). Please choose a smaller photo.`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error(`Failed to read "${file.name}"`));
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
   });
 }
 
@@ -50,17 +42,16 @@ export default function NewListingPage() {
   const handleImages = async (e) => {
     const raw = Array.from(e.target.files).slice(0, 6);
     if (!raw.length) return;
-    // Show raw previews immediately
-    setPreviews(raw.map((f) => URL.createObjectURL(f)));
+    setError('');
     setCompressing(true);
+    setImageDataURLs([]);
+    setPreviews([]);
     try {
-      const dataURLs = await Promise.all(raw.map(compressToDataURL));
+      const dataURLs = await Promise.all(raw.map(readAsDataURL));
       setImageDataURLs(dataURLs);
-      // Replace object URL previews with the final compressed data URLs
       setPreviews(dataURLs);
     } catch (err) {
-      console.error('Image compression error:', err);
-      setImageDataURLs([]);
+      setError(err.message || 'Failed to process images. Try smaller files.');
     } finally {
       setCompressing(false);
     }
@@ -145,7 +136,7 @@ export default function NewListingPage() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                   {compressing ? 'Processing images...' : 'Upload up to 6 photos'}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{compressing ? 'Please wait' : 'PNG, JPG up to 5MB each'}</p>
+                <p className="text-xs text-gray-400 mt-1">{compressing ? 'Please wait' : 'PNG, JPG — max 1.5MB each, up to 6 photos'}</p>
               </div>
               <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} disabled={compressing} />
             </label>
@@ -160,8 +151,17 @@ export default function NewListingPage() {
               </div>
             )}
           </div>
-          <button onClick={() => setStep(2)} className="btn-primary w-full py-4 text-base font-bold rounded-2xl">
-            Continue to Details →
+          {imageDataURLs.length > 0 && (
+            <p className="text-xs text-green-600 font-medium text-center">
+              {imageDataURLs.length} photo{imageDataURLs.length > 1 ? 's' : ''} ready
+            </p>
+          )}
+          <button
+            onClick={() => setStep(2)}
+            disabled={compressing}
+            className="btn-primary w-full py-4 text-base font-bold rounded-2xl disabled:opacity-50"
+          >
+            {compressing ? 'Processing photos...' : 'Continue to Details →'}
           </button>
         </div>
       )}
@@ -288,7 +288,12 @@ export default function NewListingPage() {
                 </p>
               )}
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                <p className="text-xs text-gray-400">Preview only — buyers will see the full listing after publishing.</p>
+                <p className="text-xs text-gray-400">
+            Preview only — buyers will see the full listing after publishing.
+            {imageDataURLs.length > 0
+              ? ` ${imageDataURLs.length} photo${imageDataURLs.length > 1 ? 's' : ''} will be included.`
+              : ' No photos selected — listing will publish without images.'}
+          </p>
               </div>
             </div>
           </div>

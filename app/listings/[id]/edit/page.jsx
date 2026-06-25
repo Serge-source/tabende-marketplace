@@ -5,25 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
-function compressToDataURL(file) {
+function readAsDataURL(file) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const MAX = 900;
-      let { width, height } = img;
-      if (width > MAX || height > MAX) {
-        if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
-        else { width = Math.round((width * MAX) / height); height = MAX; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width; canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.75));
-    };
-    img.src = url;
+    if (file.size > 1.5 * 1024 * 1024) {
+      reject(new Error(`"${file.name}" is too large (max 1.5MB).`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error(`Failed to read "${file.name}"`));
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
   });
 }
 
@@ -53,7 +44,7 @@ export default function EditListingPage() {
     setPreviews(raw.map((f) => URL.createObjectURL(f)));
     setCompressing(true);
     try {
-      const dataURLs = await Promise.all(raw.map(compressToDataURL));
+      const dataURLs = await Promise.all(raw.map(readAsDataURL));
       setImageDataURLs(dataURLs);
       setPreviews(dataURLs);
     } catch (err) {
