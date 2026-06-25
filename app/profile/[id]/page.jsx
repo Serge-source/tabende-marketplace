@@ -12,7 +12,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: '', bio: '', role: '' });
-  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarDataURL, setAvatarDataURL] = useState('');
   const [avatarPreview, setAvatarPreview] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -26,14 +26,26 @@ export default function ProfilePage() {
     }).finally(() => setLoading(false));
   }, [id]);
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setAvatarDataURL(ev.target.result);
+      setAvatarPreview(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const save = async () => {
     setSaving(true);
-    const fd = new FormData();
-    fd.append('name', form.name);
-    fd.append('bio', form.bio);
-    fd.append('role', form.role);
-    if (avatarFile) fd.append('avatar', avatarFile);
-    const res = await fetch('/api/users/me', { method: 'PUT', body: fd });
+    const payload = { name: form.name, bio: form.bio, role: form.role };
+    if (avatarDataURL) payload.avatar = avatarDataURL;
+    const res = await fetch('/api/users/me', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
     if (res.ok) {
       const d = await res.json();
       updateUser(d);
@@ -64,7 +76,7 @@ export default function ProfilePage() {
             {isOwn && editing && (
               <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-700 shadow-sm">
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); } }} />
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </label>
             )}
           </div>
