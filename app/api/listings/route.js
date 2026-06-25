@@ -72,7 +72,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Required fields missing' }, { status: 400 });
 
     let images = [];
-    try { images = await saveMultipleFiles(formData, 'images'); } catch (e) { console.warn('Image upload failed, continuing without images:', e.message); }
+    try {
+      images = await saveMultipleFiles(formData, 'images');
+      console.log(`[listings] saved ${images.length} images`);
+    } catch (e) {
+      console.error('[listings] image processing error:', e.message);
+    }
 
     const listing = await prisma.listing.create({
       data: { title, description, price, category, condition, location, images, sellerId: user.id },
