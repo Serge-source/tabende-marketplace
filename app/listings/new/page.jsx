@@ -6,11 +6,11 @@ const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Spo
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
 // Resize image to max 900px on longest side and compress to ~75% JPEG quality.
-// Returns a File object so it can still be appended to FormData.
 function compressImage(file) {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback: use original
     img.onload = () => {
       URL.revokeObjectURL(url);
       const MAX = 900;
@@ -23,9 +23,11 @@ function compressImage(file) {
       canvas.width = width;
       canvas.height = height;
       canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => {
-        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-      }, 'image/jpeg', 0.75);
+      canvas.toBlob(
+        (blob) => resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
+        'image/jpeg',
+        0.75
+      );
     };
     img.src = url;
   });
@@ -47,12 +49,24 @@ export default function NewListingPage() {
   const [previews, setPreviews] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
 
   const handleImages = async (e) => {
     const raw = Array.from(e.target.files).slice(0, 6);
-    const compressed = await Promise.all(raw.map(compressImage));
-    setImages(compressed);
-    setPreviews(compressed.map((f) => URL.createObjectURL(f)));
+    if (!raw.length) return;
+    setCompressing(true);
+    try {
+      const compressed = await Promise.all(raw.map(compressImage));
+      setImages(compressed);
+      setPreviews(compressed.map((f) => URL.createObjectURL(f)));
+    } catch (err) {
+      console.error('Image processing error:', err);
+      // Fall back to raw files if compression fails
+      setImages(raw);
+      setPreviews(raw.map((f) => URL.createObjectURL(f)));
+    } finally {
+      setCompressing(false);
+    }
   };
 
   const handleDetailsSubmit = (e) => {
@@ -125,14 +139,17 @@ export default function NewListingPage() {
             <label className="cursor-pointer block">
               <div className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all dark:border-gray-700 dark:hover:border-blue-500">
                 <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  {compressing
+                    ? <svg className="animate-spin h-6 w-6 text-blue-500" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    : <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  }
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Upload up to 6 photos</p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB each</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  {compressing ? 'Processing images...' : 'Upload up to 6 photos'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">{compressing ? 'Please wait' : 'PNG, JPG up to 5MB each'}</p>
               </div>
-              <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
+              <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} disabled={compressing} />
             </label>
             {previews.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
