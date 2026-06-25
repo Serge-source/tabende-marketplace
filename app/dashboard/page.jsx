@@ -38,7 +38,7 @@ export default function DashboardPage() {
       return;
     }
     setLoading(true);
-    const ep = { listings: '/api/users/me/listings', orders: '/api/orders', sales: '/api/orders/sales', favorites: '/api/users/me/favorites' };
+    const ep = { listings: '/api/users/me/listings', orders: '/api/orders', sales: '/api/orders/sales', favorites: '/api/users/me/favorites', analytics: '/api/analytics/seller' };
     fetch(ep[tab]).then((r) => r.json()).then(setData).finally(() => setLoading(false));
   }, [tab, user]);
 
@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const tabs = [
     ...(user.role !== 'BUYER' ? [{ key: 'listings', label: 'My Listings' }] : []),
     { key: 'orders', label: 'Orders' },
-    ...(user.role !== 'BUYER' ? [{ key: 'sales', label: 'Sales' }] : []),
+    ...(user.role !== 'BUYER' ? [{ key: 'sales', label: 'Sales' }, { key: 'analytics', label: 'Analytics' }] : []),
     { key: 'favorites', label: 'Saved' },
   ];
 
@@ -174,6 +174,63 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
+
+          {tab === 'analytics' && data.overview && (
+            <div className="space-y-6">
+              {/* Overview cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Listings', val: data.overview.totalListings, icon: '📦', color: 'bg-blue-50 text-blue-600' },
+                  { label: 'Active', val: data.overview.activeListings, icon: '✅', color: 'bg-green-50 text-green-600' },
+                  { label: 'Total Sales', val: data.overview.totalSales, icon: '🛒', color: 'bg-purple-50 text-purple-600' },
+                  { label: 'Total Favorites', val: data.overview.favorites, icon: '❤️', color: 'bg-red-50 text-red-600' },
+                ].map((s) => (
+                  <div key={s.label} className="card p-4 flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${s.color}`}>{s.icon}</div>
+                    <div><p className="text-xl font-extrabold text-gray-900">{s.val}</p><p className="text-xs text-gray-500">{s.label}</p></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Revenue last 30 days */}
+              <div className="card p-5">
+                <h3 className="font-semibold text-gray-900 mb-1">Revenue (Last 30 Days)</h3>
+                <p className="text-3xl font-extrabold text-emerald-600">${data.revenue.last30Days.toLocaleString()}</p>
+                <p className="text-xs text-gray-400 mt-0.5">After 5% marketplace commission</p>
+                {Object.keys(data.revenue.salesByDay).length > 0 && (
+                  <div className="mt-4 flex items-end gap-1 h-20">
+                    {Object.entries(data.revenue.salesByDay).slice(-14).map(([day, rev]) => {
+                      const max = Math.max(...Object.values(data.revenue.salesByDay));
+                      const h = max > 0 ? Math.round((rev / max) * 100) : 0;
+                      return (
+                        <div key={day} className="flex-1 flex flex-col items-center gap-1" title={`${day}: $${rev.toFixed(2)}`}>
+                          <div className="w-full bg-emerald-500 rounded-t" style={{ height: `${h}%`, minHeight: '2px' }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Top listings */}
+              {data.topListings?.length > 0 && (
+                <div className="card p-5">
+                  <h3 className="font-semibold text-gray-900 mb-3">Top Listings by Favorites</h3>
+                  <div className="space-y-2">
+                    {data.topListings.map((l, i) => (
+                      <div key={l.id} className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
+                        <Link href={`/listings/${l.id}`} className="flex-1 text-sm font-medium text-gray-900 hover:text-blue-600 truncate">{l.title}</Link>
+                        <span className="text-sm font-bold text-blue-600 flex-shrink-0">${l.price.toLocaleString()}</span>
+                        <span className="text-xs text-gray-400 flex-shrink-0">❤️ {l._count.favorites}</span>
+                        <span className={`badge text-xs flex-shrink-0 ${l.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{l.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {tab === 'favorites' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

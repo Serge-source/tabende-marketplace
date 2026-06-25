@@ -13,9 +13,15 @@ export default function AdminPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(tab === 'users' ? '/api/admin/users' : '/api/admin/listings')
+    const ep = { users: '/api/admin/users', listings: '/api/admin/listings', reports: '/api/admin/reports' };
+    fetch(ep[tab] || '/api/admin/listings')
       .then((r) => r.json()).then(setData).finally(() => setLoading(false));
   }, [tab]);
+
+  const resolveReport = async (id, status) => {
+    await fetch(`/api/admin/reports/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    setData((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+  };
 
   const patchListing = async (id, body) => {
     await fetch(`/api/admin/listings/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -61,10 +67,10 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-0.5 border-b border-gray-200 mb-6">
-        {['listings', 'users'].map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium capitalize rounded-t-lg transition-colors ${tab === t ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
-            {t === 'listings' ? 'Moderation' : 'Users'}
+        {[{ key: 'listings', label: 'Moderation' }, { key: 'users', label: 'Users' }, { key: 'reports', label: 'Reports' }].map((t) => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${tab === t.key ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -121,6 +127,29 @@ export default function AdminPage() {
                   </button>
                 )}
               </div>
+            </div>
+          ))}
+
+          {tab === 'reports' && data.map((r) => (
+            <div key={r.id} className="card p-4 flex items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className={`badge text-xs ${r.status === 'PENDING' ? 'bg-amber-50 text-amber-700' : r.status === 'RESOLVED' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{r.status}</span>
+                  <span className="badge bg-red-50 text-red-700 text-xs">{r.reason}</span>
+                </div>
+                <p className="text-sm text-gray-900 font-medium">{r.description}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  By <span className="font-medium">{r.reporter?.name}</span>
+                  {r.reportedUser && <> against <span className="font-medium">{r.reportedUser.name}</span></>}
+                  {r.listing && <> · Listing: <span className="font-medium">{r.listing.title}</span></>}
+                </p>
+              </div>
+              {r.status === 'PENDING' && (
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <button onClick={() => resolveReport(r.id, 'RESOLVED')} className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-100 font-medium">Resolve</button>
+                  <button onClick={() => resolveReport(r.id, 'DISMISSED')} className="text-xs bg-gray-50 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 font-medium">Dismiss</button>
+                </div>
+              )}
             </div>
           ))}
 

@@ -14,9 +14,13 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
+  const allowedOrigins = process.env.NEXT_PUBLIC_APP_URL
+    ? [process.env.NEXT_PUBLIC_APP_URL]
+    : ['http://localhost:3000'];
+
   const io = new Server(httpServer, {
     path: '/api/socket',
-    cors: { origin: '*', methods: ['GET', 'POST'] },
+    cors: { origin: allowedOrigins, methods: ['GET', 'POST'], credentials: true },
   });
 
   // Attach io to global so API routes can emit events
@@ -26,7 +30,7 @@ app.prepare().then(() => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('No token'));
     try {
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret');
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET);
       const { payload } = await jwtVerify(token, secret);
       socket.data.userId = payload.id;
       socket.data.role = payload.role;

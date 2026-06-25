@@ -28,6 +28,11 @@ model User {
   reviewsGiven        Review[]       @relation("ReviewsGiven")
   reviewsReceived     Review[]       @relation("ReviewsReceived")
   favorites           Favorite[]
+  reports             Report[]       @relation("ReportsFiled")
+  reportsReceived     Report[]       @relation("ReportsReceived")
+
+  @@index([email])
+  @@index([role])
 }
 
 enum Role {
@@ -47,6 +52,7 @@ model Listing {
   location    String?
   status      ListingStatus @default(ACTIVE)
   featured    Boolean       @default(false)
+  viewCount   Int           @default(0)
   sellerId    String
   seller      User          @relation(fields: [sellerId], references: [id])
   createdAt   DateTime      @default(now())
@@ -55,6 +61,14 @@ model Listing {
   orders        Order[]
   conversations Conversation[]
   favorites     Favorite[]
+  reports       Report[]
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([category])
+  @@index([featured])
+  @@index([createdAt])
+  @@index([price])
 }
 
 enum ListingStatus {
@@ -73,6 +87,8 @@ model Order {
   sellerId        String
   seller          User           @relation("SellerOrders", fields: [sellerId], references: [id])
   amount          Float
+  commission      Float          @default(0)
+  sellerPayout    Float          @default(0)
   status          OrderStatus    @default(PENDING)
   shippingStatus  ShippingStatus @default(ORDER_PLACED)
   stripeSessionId String?
@@ -80,7 +96,13 @@ model Order {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  review Review?
+  review  Review?
+  reports Report[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([stripeSessionId])
 }
 
 enum OrderStatus {
@@ -111,6 +133,8 @@ model Conversation {
   messages Message[]
 
   @@unique([listingId, buyerId, sellerId])
+  @@index([buyerId])
+  @@index([sellerId])
 }
 
 model Message {
@@ -122,6 +146,9 @@ model Message {
   content        String
   read           Boolean      @default(false)
   createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
 }
 
 model Review {
@@ -135,6 +162,9 @@ model Review {
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
+
+  @@index([revieweeId])
+  @@index([reviewerId])
 }
 
 model Favorite {
@@ -146,4 +176,42 @@ model Favorite {
   createdAt DateTime @default(now())
 
   @@unique([userId, listingId])
+  @@index([userId])
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  reason         ReportReason
+  description    String
+  status         ReportStatus @default(PENDING)
+  reporterId     String
+  reporter       User         @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reportedUserId String?
+  reportedUser   User?        @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  listingId      String?
+  listing        Listing?     @relation(fields: [listingId], references: [id])
+  orderId        String?
+  order          Order?       @relation(fields: [orderId], references: [id])
+  adminNote      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status])
+  @@index([reporterId])
+  @@index([reportedUserId])
+}
+
+enum ReportReason {
+  SPAM
+  FRAUD
+  COUNTERFEIT
+  INAPPROPRIATE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
 }

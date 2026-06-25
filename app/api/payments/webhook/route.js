@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
+import { sendOrderConfirmationEmail, sendSaleNotificationEmail } from '@/lib/email';
 
 export async function POST(request) {
   const body = await request.text();
@@ -22,6 +23,20 @@ export async function POST(request) {
       data: { status: 'PAID', stripePaymentId: session.payment_intent },
     });
     await prisma.listing.update({ where: { id: listingId }, data: { status: 'SOLD' } });
+
+    // Send emails (non-blocking)
+    const order = await prisma.order.findFirst({
+      where: { stripeSessionId: session.id },
+      include: {
+        buyer: { select: { id: true, name: true, email: true } },
+        seller: { select: { id: true, name: true, email: true } },
+        listing: { select: { id: true, title: true } },
+      },
+    });
+    if (order) {
+      sendOrderConfirmationEmail(order).catch(console.error);
+      sendSaleNotificationEmail(order).catch(console.error);
+    }
   }
 
   return NextResponse.json({ received: true });
