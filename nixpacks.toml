@@ -2,5 +2,6 @@
 cmds = [
   "npm install",
   "npx prisma generate",
+  "rm -rf .next",
   "DATABASE_URL='postgresql://placeholder:placeholder@localhost:5432/placeholder' npm run build"
 ]
