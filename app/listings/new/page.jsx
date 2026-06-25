@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
-// Resize image to max 900px on longest side and compress to ~75% JPEG quality.
-function compressImage(file) {
-  return new Promise((resolve) => {
+// Resize image to max 900px and return a base64 data URL ready for storage.
+function compressToDataURL(file) {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback: use original
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
     img.onload = () => {
       URL.revokeObjectURL(url);
       const MAX = 900;
@@ -23,11 +23,7 @@ function compressImage(file) {
       canvas.width = width;
       canvas.height = height;
       canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
-        'image/jpeg',
-        0.75
-      );
+      resolve(canvas.toDataURL('image/jpeg', 0.75));
     };
     img.src = url;
   });
@@ -45,8 +41,8 @@ export default function NewListingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ title: '', description: '', price: '', category: '', condition: '', location: '' });
-  const [images, setImages] = useState([]);
-  const [previews, setPreviews] = useState([]);
+  const [imageDataURLs, setImageDataURLs] = useState([]); // base64 strings for upload
+  const [previews, setPreviews] = useState([]);             // object URLs for display
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [compressing, setCompressing] = useState(false);
@@ -54,16 +50,17 @@ export default function NewListingPage() {
   const handleImages = async (e) => {
     const raw = Array.from(e.target.files).slice(0, 6);
     if (!raw.length) return;
+    // Show raw previews immediately
+    setPreviews(raw.map((f) => URL.createObjectURL(f)));
     setCompressing(true);
     try {
-      const compressed = await Promise.all(raw.map(compressImage));
-      setImages(compressed);
-      setPreviews(compressed.map((f) => URL.createObjectURL(f)));
+      const dataURLs = await Promise.all(raw.map(compressToDataURL));
+      setImageDataURLs(dataURLs);
+      // Replace object URL previews with the final compressed data URLs
+      setPreviews(dataURLs);
     } catch (err) {
-      console.error('Image processing error:', err);
-      // Fall back to raw files if compression fails
-      setImages(raw);
-      setPreviews(raw.map((f) => URL.createObjectURL(f)));
+      console.error('Image compression error:', err);
+      setImageDataURLs([]);
     } finally {
       setCompressing(false);
     }
@@ -79,10 +76,11 @@ export default function NewListingPage() {
     setLoading(true);
     setError('');
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      images.forEach((img) => fd.append('images', img));
-      const res = await fetch('/api/listings', { method: 'POST', body: fd });
+      const res = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, images: imageDataURLs }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       router.push(`/listings/${data.id}`);

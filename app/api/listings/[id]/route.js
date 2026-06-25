@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
-import { saveMultipleFiles } from '@/lib/upload';
 
 export async function GET(request, { params }) {
   const listing = await prisma.listing.findUnique({
@@ -30,21 +29,24 @@ export async function PUT(request, { params }) {
   if (listing.sellerId !== user.id && user.role !== 'ADMIN')
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const formData = await request.formData();
-  let newImages = [];
-  try { newImages = await saveMultipleFiles(formData, 'images'); } catch (e) { console.warn('Image upload failed:', e.message); }
+  const body = await request.json();
+  const { title, description, price, category, condition, location, status, images } = body;
+
+  const validImages = Array.isArray(images)
+    ? images.filter((img) => typeof img === 'string' && (img.startsWith('data:image/') || img.startsWith('/')))
+    : null;
 
   const updated = await prisma.listing.update({
     where: { id: params.id },
     data: {
-      title: formData.get('title') || listing.title,
-      description: formData.get('description') || listing.description,
-      price: formData.get('price') ? parseFloat(formData.get('price')) : listing.price,
-      category: formData.get('category') || listing.category,
-      condition: formData.get('condition') || listing.condition,
-      location: formData.get('location') ?? listing.location,
-      status: formData.get('status') || listing.status,
-      images: newImages.length ? newImages : listing.images,
+      title: title || listing.title,
+      description: description || listing.description,
+      price: price ? parseFloat(price) : listing.price,
+      category: category || listing.category,
+      condition: condition || listing.condition,
+      location: location ?? listing.location,
+      status: status || listing.status,
+      images: validImages !== null ? validImages : listing.images,
     },
   });
   return NextResponse.json(updated);

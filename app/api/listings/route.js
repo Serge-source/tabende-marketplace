@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
-import { saveMultipleFiles } from '@/lib/upload';
 
 
 export async function GET(request) {
@@ -60,31 +59,34 @@ export async function POST(request) {
   if (error) return error;
 
   try {
-    const formData = await request.formData();
-    const title = formData.get('title');
-    const description = formData.get('description');
-    const price = parseFloat(formData.get('price'));
-    const category = formData.get('category');
-    const condition = formData.get('condition');
-    const location = formData.get('location') || null;
+    const body = await request.json();
+    const { title, description, price, category, condition, location, images = [] } = body;
 
     if (!title || !description || !price || !category || !condition)
       return NextResponse.json({ error: 'Required fields missing' }, { status: 400 });
 
-    let images = [];
-    try {
-      images = await saveMultipleFiles(formData, 'images');
-      console.log(`[listings] saved ${images.length} images`);
-    } catch (e) {
-      console.error('[listings] image processing error:', e.message);
-    }
+    // images arrives as an array of base64 data URLs from the client
+    const validImages = Array.isArray(images)
+      ? images.filter((img) => typeof img === 'string' && img.startsWith('data:image/'))
+      : [];
+
+    console.log(`[listings POST] creating listing with ${validImages.length} images`);
 
     const listing = await prisma.listing.create({
-      data: { title, description, price, category, condition, location, images, sellerId: user.id },
+      data: {
+        title,
+        description,
+        price: parseFloat(price),
+        category,
+        condition,
+        location: location || null,
+        images: validImages,
+        sellerId: user.id,
+      },
     });
     return NextResponse.json(listing, { status: 201 });
   } catch (err) {
-    console.error(err);
+    console.error('[listings POST] error:', err);
     return NextResponse.json({ error: 'Failed to create listing' }, { status: 500 });
   }
 }

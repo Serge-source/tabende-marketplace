@@ -5,10 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
-function compressImage(file) {
-  return new Promise((resolve) => {
+function compressToDataURL(file) {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
     img.onload = () => {
       URL.revokeObjectURL(url);
       const MAX = 900;
@@ -20,7 +21,7 @@ function compressImage(file) {
       const canvas = document.createElement('canvas');
       canvas.width = width; canvas.height = height;
       canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.75);
+      resolve(canvas.toDataURL('image/jpeg', 0.75));
     };
     img.src = url;
   });
@@ -30,8 +31,9 @@ export default function EditListingPage() {
   const { id } = useParams();
   const router = useRouter();
   const [form, setForm] = useState(null);
-  const [images, setImages] = useState([]);
+  const [imageDataURLs, setImageDataURLs] = useState([]);
   const [previews, setPreviews] = useState([]);
+  const [compressing, setCompressing] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -41,24 +43,35 @@ export default function EditListingPage() {
       const d = await r.json();
       setForm({ title: d.title, description: d.description, price: d.price, category: d.category, condition: d.condition, location: d.location || '', status: d.status });
       setPreviews(d.images || []);
+      setImageDataURLs(d.images || []);
     });
   }, [id]);
 
   const handleImages = async (e) => {
     const raw = Array.from(e.target.files).slice(0, 6);
-    const compressed = await Promise.all(raw.map(compressImage));
-    setImages(compressed);
-    setPreviews(compressed.map((f) => URL.createObjectURL(f)));
+    if (!raw.length) return;
+    setPreviews(raw.map((f) => URL.createObjectURL(f)));
+    setCompressing(true);
+    try {
+      const dataURLs = await Promise.all(raw.map(compressToDataURL));
+      setImageDataURLs(dataURLs);
+      setPreviews(dataURLs);
+    } catch (err) {
+      console.error('Image compression error:', err);
+    } finally {
+      setCompressing(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      images.forEach((img) => fd.append('images', img));
-      const res = await fetch(`/api/listings/${id}`, { method: 'PUT', body: fd });
+      const res = await fetch(`/api/listings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, images: imageDataURLs }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       router.push(`/listings/${id}`);
@@ -98,10 +111,12 @@ export default function EditListingPage() {
           )}
           <label className="cursor-pointer block">
             <div className="border-2 border-dashed border-gray-200 rounded-2xl p-5 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all">
-              <p className="text-sm font-medium text-gray-600">Click to replace photos</p>
-              <p className="text-xs text-gray-400 mt-0.5">Up to 6 images</p>
+              {compressing
+                ? <p className="text-sm font-medium text-blue-600">Processing images...</p>
+                : <><p className="text-sm font-medium text-gray-600">Click to replace photos</p><p className="text-xs text-gray-400 mt-0.5">Up to 6 images</p></>
+              }
             </div>
-            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
+            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} disabled={compressing} />
           </label>
         </div>
         <div className="card p-6 space-y-4">
