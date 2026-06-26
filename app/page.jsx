@@ -18,6 +18,7 @@ const CATEGORIES = [
 export default function HomePage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
   const [featured, setFeatured] = useState([]);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,40 +35,70 @@ export default function HomePage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (search.trim()) router.push(`/browse?search=${encodeURIComponent(search.trim())}`);
+    const params = new URLSearchParams();
+    if (search.trim()) params.set('search', search.trim());
+    if (category) params.set('category', category);
+    router.push(`/browse?${params.toString()}`);
   };
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-600 text-white py-24 px-4">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.04%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-100" />
-        <div className="relative max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Trusted by thousands of buyers & sellers
-          </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mb-5 leading-tight">
-            Buy & Sell<br />with Confidence
+      <section className="flex flex-col lg:flex-row items-center justify-between gap-12 px-[8%] py-20 lg:min-h-[80vh]" style={{ background: 'linear-gradient(135deg, #f8fbff, #eef6ff)' }}>
+        {/* Content */}
+        <div className="flex-1 min-w-0 max-w-[620px]">
+          <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold mb-5" style={{ background: '#e2f0ff', color: '#0066cc' }}>
+            Buy &amp; Sell Locally
+          </span>
+          <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight mb-5" style={{ color: '#102033' }}>
+            Find Great Deals<br />Near You
           </h1>
-          <p className="text-blue-100 text-lg sm:text-xl mb-10 max-w-xl mx-auto font-light">
-            Tabende connects buyers and sellers in a secure, verified marketplace with real-time chat and safe payments.
+          <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: '#5c6b7a' }}>
+            Discover second-hand items, local services, and unique products from people in your community. Sell what you no longer need and connect safely with trusted buyers.
           </p>
-          <form onSubmit={handleSearch} className="flex max-w-xl mx-auto gap-2">
-            <div className="relative flex-1">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="What are you looking for?"
-                className="w-full pl-12 pr-4 py-4 rounded-2xl text-gray-900 text-base focus:outline-none focus:ring-4 focus:ring-white/30 shadow-xl"
-              />
-            </div>
-            <button type="submit" className="bg-white text-blue-700 font-bold px-7 py-4 rounded-2xl hover:bg-blue-50 transition-colors shadow-xl text-base whitespace-nowrap">
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Link href="/browse" className="px-7 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90" style={{ background: '#0066cc' }}>
+              Start Browsing
+            </Link>
+            <Link href="/sell" className="px-7 py-3.5 rounded-xl font-bold text-base border transition-colors hover:bg-blue-50" style={{ background: 'white', color: '#0066cc', borderColor: '#c9def5' }}>
+              Sell an Item
+            </Link>
+          </div>
+          <form onSubmit={handleSearch} className="flex gap-2.5 p-3 rounded-2xl max-w-xl" style={{ background: 'white', boxShadow: '0 12px 30px rgba(0,0,0,0.08)' }}>
+            <input
+              type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search phones, furniture, cars..."
+              className="flex-1 min-w-0 px-3 py-3 rounded-xl text-gray-900 text-base focus:outline-none border"
+              style={{ borderColor: '#dde6ef' }}
+            />
+            <select
+              value={category} onChange={(e) => setCategory(e.target.value)}
+              className="hidden sm:block text-gray-600 text-sm px-3 py-3 rounded-xl focus:outline-none border flex-shrink-0"
+              style={{ borderColor: '#dde6ef' }}
+            >
+              <option value="">All Categories</option>
+              {CATEGORIES.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+            </select>
+            <button type="submit" className="text-white font-bold px-5 py-3 rounded-xl text-base transition-opacity hover:opacity-90 flex-shrink-0" style={{ background: '#ff8a00' }}>
               Search
             </button>
           </form>
+        </div>
+
+        {/* Hero image */}
+        <div className="flex-shrink-0 w-full lg:w-[480px]">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] bg-blue-100 flex items-center justify-center">
+            <img
+              src="/marketplace-hero.png"
+              alt="People buying and selling online"
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none select-none" style={{ color: '#b3c7e6' }}>
+              <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              <span className="text-sm font-medium">Add marketplace-hero.png to /public</span>
+            </div>
+          </div>
         </div>
       </section>
 
