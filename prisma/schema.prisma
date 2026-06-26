@@ -16,6 +16,11 @@ model User {
   bio              String?
   role             Role     @default(BUYER)
   isVerified       Boolean  @default(false)
+  emailVerified    Boolean  @default(false)
+  emailVerifyToken  String?
+  emailVerifyExpires DateTime?
+  resetPasswordToken  String?
+  resetPasswordExpires DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -30,9 +35,12 @@ model User {
   favorites           Favorite[]
   reports             Report[]       @relation("ReportsFiled")
   reportsReceived     Report[]       @relation("ReportsReceived")
+  notifications       Notification[]
 
   @@index([email])
   @@index([role])
+  @@index([emailVerifyToken])
+  @@index([resetPasswordToken])
 }
 
 enum Role {
@@ -42,21 +50,24 @@ enum Role {
 }
 
 model Listing {
-  id          String        @id @default(cuid())
-  title       String
-  description String
-  price       Float
-  category    String
-  condition   String
-  images      String[]
-  location    String?
-  status      ListingStatus @default(ACTIVE)
-  featured    Boolean       @default(false)
-  viewCount   Int           @default(0)
-  sellerId    String
-  seller      User          @relation(fields: [sellerId], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  title          String
+  description    String
+  price          Float
+  category       String
+  condition      String
+  images         String[]
+  location       String?
+  status         ListingStatus @default(ACTIVE)
+  featured       Boolean       @default(false)
+  isBoosted      Boolean       @default(false)
+  boostExpiresAt DateTime?
+  expiresAt      DateTime?
+  viewCount      Int           @default(0)
+  sellerId       String
+  seller         User          @relation(fields: [sellerId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   orders        Order[]
   conversations Conversation[]
@@ -67,6 +78,8 @@ model Listing {
   @@index([status])
   @@index([category])
   @@index([featured])
+  @@index([isBoosted])
+  @@index([expiresAt])
   @@index([createdAt])
   @@index([price])
 }
@@ -214,4 +227,28 @@ enum ReportStatus {
   REVIEWING
   RESOLVED
   DISMISSED
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  href      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  ORDER_UPDATE
+  NEW_REVIEW
+  LISTING_FEATURED
+  LISTING_EXPIRING
+  REPORT_UPDATE
 }

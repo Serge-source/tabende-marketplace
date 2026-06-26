@@ -109,13 +109,33 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <Link href={`/listings/${l.id}`} className="font-semibold text-gray-900 hover:text-blue-600 truncate block">{l.title}</Link>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="font-bold text-blue-600">${l.price.toLocaleString()}</span>
                   <span className={`badge text-xs ${l.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : l.status === 'SOLD' ? 'bg-gray-100 text-gray-500' : 'bg-red-50 text-red-600'}`}>{l.status}</span>
+                  {l.isBoosted && <span className="badge text-xs bg-amber-50 text-amber-700">★ Boosted</span>}
                   <span className="text-xs text-gray-400 flex items-center gap-1"><svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>{l._count?.favorites || 0}</span>
+                  {l.expiresAt && l.status === 'ACTIVE' && (() => {
+                    const daysLeft = Math.ceil((new Date(l.expiresAt) - Date.now()) / (1000 * 60 * 60 * 24));
+                    return daysLeft <= 14 ? <span className="text-xs text-orange-500">Expires in {daysLeft}d</span> : null;
+                  })()}
                 </div>
               </div>
-              <Link href={`/listings/${l.id}/edit`} className="btn-secondary text-xs px-3 py-1.5 flex-shrink-0">Edit</Link>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {(l.status === 'SOLD' || (l.expiresAt && new Date(l.expiresAt) < new Date())) && (
+                  <button onClick={async () => {
+                    const res = await fetch(`/api/listings/${l.id}/relist`, { method: 'POST' });
+                    if (res.ok) setData((prev) => prev.map((x) => x.id === l.id ? { ...x, status: 'ACTIVE', expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() } : x));
+                  }} className="btn-secondary text-xs px-3 py-1.5">Relist</button>
+                )}
+                {l.status === 'ACTIVE' && !l.isBoosted && (
+                  <button onClick={async () => {
+                    const res = await fetch(`/api/listings/${l.id}/boost`, { method: 'POST' });
+                    const d = await res.json();
+                    if (d.url) window.location.href = d.url;
+                  }} className="text-xs px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 font-medium transition-colors">★ Boost $5</button>
+                )}
+                <Link href={`/listings/${l.id}/edit`} className="btn-secondary text-xs px-3 py-1.5">Edit</Link>
+              </div>
             </div>
           ))}
 

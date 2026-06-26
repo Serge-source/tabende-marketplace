@@ -58,8 +58,11 @@ function LoginForm() {
                 value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <input type="password" required autoComplete="current-password" className="input" placeholder="••••••••"
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">Forgot password?</Link>
+              </div>
+              <input type="password" required autoComplete="current-password" className="input" placeholder="•••••••��"
                 value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base mt-2">

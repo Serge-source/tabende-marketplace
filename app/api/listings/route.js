@@ -9,15 +9,21 @@ export async function GET(request) {
     const category = searchParams.get('category');
     const condition = searchParams.get('condition');
     const search = searchParams.get('search');
+    const location = searchParams.get('location');
     const sort = searchParams.get('sort') || 'newest';
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
 
-    const where = { status: 'ACTIVE' };
+    const where = { status: 'ACTIVE', OR: undefined };
+    // Auto-filter expired listings
+    where.AND = [
+      { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+    ];
     if (category) where.category = category;
     if (condition) where.condition = condition;
+    if (location) where.location = { contains: location, mode: 'insensitive' };
     if (minPrice || maxPrice) {
       where.price = {};
       if (minPrice) where.price.gte = parseFloat(minPrice);
@@ -27,6 +33,7 @@ export async function GET(request) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
+        { location: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -72,6 +79,7 @@ export async function POST(request) {
 
     console.log(`[listings POST] creating listing with ${validImages.length} images`);
 
+    const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000); // 60 days
     const listing = await prisma.listing.create({
       data: {
         title,
@@ -82,6 +90,7 @@ export async function POST(request) {
         location: location || null,
         images: validImages,
         sellerId: user.id,
+        expiresAt,
       },
     });
     return NextResponse.json(listing, { status: 201 });

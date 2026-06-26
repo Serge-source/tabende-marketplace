@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { createNotification } from '@/lib/notify';
 
 export async function POST(request, { params }) {
   const { user, error } = await requireAuth(request);
@@ -26,6 +27,15 @@ export async function POST(request, { params }) {
   if (global._io) {
     global._io.to(`conv:${params.id}`).emit('new_message', message);
   }
+
+  // Notify recipient
+  const recipientId = conv.buyerId === user.id ? conv.sellerId : conv.buyerId;
+  createNotification(recipientId, {
+    type: 'NEW_MESSAGE',
+    title: `New message from ${message.sender.name}`,
+    body: content.trim().slice(0, 80),
+    href: `/messages`,
+  }).catch(console.error);
 
   return NextResponse.json(message, { status: 201 });
 }

@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { gtagEvent } from '@/lib/gtag';
 
 function CheckoutSuccessContent() {
   const params = useSearchParams();
@@ -12,7 +13,10 @@ function CheckoutSuccessContent() {
   useEffect(() => {
     if (!sessionId) { setLoading(false); return; }
     fetch(`/api/payments/session/${sessionId}`)
-      .then((r) => r.json()).then(setOrder).finally(() => setLoading(false));
+      .then((r) => r.json()).then((d) => {
+        setOrder(d);
+        if (d?.amount) gtagEvent('purchase', { transaction_id: d.id, value: d.amount, currency: 'USD' });
+      }).finally(() => setLoading(false));
   }, [sessionId]);
 
   return (

@@ -32,6 +32,7 @@ function BrowseContent() {
   const category = sp('category');
   const condition = sp('condition');
   const search = sp('search');
+  const location = sp('location');
   const sort = sp('sort') || 'newest';
   const minPrice = sp('minPrice');
   const maxPrice = sp('maxPrice');
@@ -52,6 +53,7 @@ function BrowseContent() {
     if (category) p.set('category', category);
     if (condition) p.set('condition', condition);
     if (search) p.set('search', search);
+    if (location) p.set('location', location);
     if (sort) p.set('sort', sort);
     if (minPrice) p.set('minPrice', minPrice);
     if (maxPrice) p.set('maxPrice', maxPrice);
@@ -63,11 +65,11 @@ function BrowseContent() {
     setTotal(data.total || 0);
     setPages(data.pages || 1);
     setLoading(false);
-  }, [category, condition, search, sort, minPrice, maxPrice, page]);
+  }, [category, condition, search, location, sort, minPrice, maxPrice, page]);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
 
-  const hasFilters = category || condition || minPrice || maxPrice;
+  const hasFilters = category || condition || minPrice || maxPrice || location;
 
   return (
     <div className="section py-8">
@@ -129,6 +131,12 @@ function BrowseContent() {
                 <input type="number" placeholder="Max" className="input text-sm" value={maxPrice}
                   onChange={(e) => setParam('maxPrice', e.target.value)} />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Location</label>
+              <input type="text" placeholder="City, region..." className="input text-sm" value={location}
+                onChange={(e) => setParam('location', e.target.value)} />
             </div>
           </div>
         </aside>

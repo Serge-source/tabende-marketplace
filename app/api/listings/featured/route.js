@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // Auto-expire paid boosts
+  await prisma.listing.updateMany({
+    where: { isBoosted: true, boostExpiresAt: { lt: new Date() } },
+    data: { isBoosted: false, featured: false },
+  });
+
   const listings = await prisma.listing.findMany({
     where: { status: 'ACTIVE', featured: true },
     take: 8,

@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { signToken, setTokenCookie } from '@/lib/auth';
 import { registerSchema, validate } from '@/lib/validations';
-import { sendWelcomeEmail } from '@/lib/email';
+import { sendWelcomeEmail, sendVerificationEmail } from '@/lib/email';
+import crypto from 'crypto';
 import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(request) {
@@ -25,12 +26,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
 
     const hashed = await bcrypt.hash(password, 12);
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed, role },
+      data: { name, email, password: hashed, role, emailVerifyToken: verifyToken, emailVerifyExpires: verifyExpires },
     });
 
-    // Send welcome email (non-blocking)
     sendWelcomeEmail(user).catch(console.error);
+    sendVerificationEmail(user, verifyToken).catch(console.error);
 
     const token = await signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
     const res = NextResponse.json({

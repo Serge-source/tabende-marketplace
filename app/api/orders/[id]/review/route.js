@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { createNotification } from '@/lib/notify';
+import { sendReviewEmail } from '@/lib/email';
 
 export async function POST(request, { params }) {
   const { user, error } = await requireAuth(request);
@@ -19,6 +21,18 @@ export async function POST(request, { params }) {
     const review = await prisma.review.create({
       data: { orderId: order.id, reviewerId: user.id, revieweeId: order.sellerId, rating, comment },
     });
+
+    const seller = await prisma.user.findUnique({ where: { id: order.sellerId }, select: { id: true, name: true, email: true } });
+    if (seller) {
+      createNotification(seller.id, {
+        type: 'NEW_REVIEW',
+        title: `New ${rating}-star review`,
+        body: comment ? comment.slice(0, 80) : `You received a ${rating}-star rating.`,
+        href: `/profile/${seller.id}`,
+      }).catch(console.error);
+      sendReviewEmail(seller, { name: user.name }, rating).catch(console.error);
+    }
+
     return NextResponse.json(review, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Already reviewed' }, { status: 409 });

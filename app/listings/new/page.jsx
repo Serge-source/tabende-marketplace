@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { gtagEvent } from '@/lib/gtag';
 
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
@@ -108,7 +109,7 @@ export default function NewListingPage() {
 
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-      console.log(`[publish] created listing ${data.id} with ${data.images?.length ?? 0} images`);
+      gtagEvent('listing_created', { listing_id: data.id, category: form.category, price: parseFloat(form.price) });
       router.push(`/listings/${data.id}`);
     } catch (err) {
       setError(err.message || 'Failed to create listing');

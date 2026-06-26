@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { sendOrderConfirmationEmail, sendSaleNotificationEmail } from '@/lib/email';
+import { createNotification } from '@/lib/notify';
 
 export async function POST(request) {
   const body = await request.text();
@@ -36,6 +37,18 @@ export async function POST(request) {
     if (order) {
       sendOrderConfirmationEmail(order).catch(console.error);
       sendSaleNotificationEmail(order).catch(console.error);
+      createNotification(order.buyerId, {
+        type: 'ORDER_UPDATE',
+        title: 'Order confirmed',
+        body: `Your purchase of "${order.listing?.title}" is confirmed.`,
+        href: '/dashboard',
+      }).catch(console.error);
+      createNotification(order.sellerId, {
+        type: 'ORDER_UPDATE',
+        title: 'You made a sale!',
+        body: `"${order.listing?.title}" was sold for $${order.amount?.toLocaleString()}.`,
+        href: '/dashboard',
+      }).catch(console.error);
     }
   }
 
