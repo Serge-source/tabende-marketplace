@@ -5,7 +5,7 @@ export async function GET(request, { params }) {
   const user = await prisma.user.findUnique({
     where: { id: params.id },
     select: {
-      id: true, name: true, avatar: true, bio: true, isVerified: true, role: true, createdAt: true,
+      id: true, name: true, avatar: true, bio: true, isVerified: true, role: true, createdAt: true, mfaEnabled: true,
       listings: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'desc' }, take: 20 },
       reviewsReceived: {
         include: { reviewer: { select: { id: true, name: true, avatar: true } } },

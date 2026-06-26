@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { signToken, setTokenCookie } from '@/lib/auth';
 import { loginSchema, validate } from '@/lib/validations';
 import { rateLimit } from '@/lib/rateLimit';
+import speakeasy from 'speakeasy';
 
 export async function POST(request) {
   try {
@@ -20,11 +21,25 @@ export async function POST(request) {
     const { error, data } = validate(loginSchema, body);
     if (error) return NextResponse.json({ error }, { status: 400 });
 
-    const { email, password } = data;
+    const { email, password, mfaToken } = data;
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+
+    // If MFA is enabled, require TOTP token
+    if (user.mfaEnabled) {
+      if (!mfaToken) {
+        return NextResponse.json({ error: 'MFA_REQUIRED' }, { status: 403 });
+      }
+      const valid = speakeasy.totp.verify({
+        secret: user.mfaSecret,
+        encoding: 'base32',
+        token: mfaToken,
+        window: 1,
+      });
+      if (!valid) return NextResponse.json({ error: 'Invalid authenticator code' }, { status: 401 });
+    }
 
     const token = await signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
     const res = NextResponse.json({

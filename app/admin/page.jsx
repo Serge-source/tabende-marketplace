@@ -1,6 +1,91 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+// --- Inline SVG chart helpers ---
+
+function LineChart({ data, valueKey, color = '#2563eb', label }) {
+  if (!data?.length) return null;
+  const W = 500, H = 120, PAD = 8;
+  const values = data.map((d) => d[valueKey]);
+  const max = Math.max(...values, 1);
+  const pts = values.map((v, i) => {
+    const x = PAD + (i / (values.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - (v / max) * (H - PAD * 2);
+    return `${x},${y}`;
+  });
+  const polyline = pts.join(' ');
+  // Fill path: close below the line
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  const [lx] = last.split(',');
+  const [fx] = first.split(',');
+  const fill = `${polyline} ${lx},${H - PAD} ${fx},${H - PAD}`;
+
+  // Show every ~7th date label
+  const labelStep = Math.max(1, Math.floor(data.length / 5));
+  const dateLabels = data
+    .map((d, i) => ({ i, label: i % labelStep === 0 ? d.date.slice(5) : null }))
+    .filter((d) => d.label);
+
+  return (
+    <div>
+      {label && <p className="text-xs font-medium text-gray-500 mb-2">{label}</p>}
+      <svg viewBox={`0 0 ${W} ${H + 16}`} className="w-full" preserveAspectRatio="none">
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75, 1].map((f) => (
+          <line key={f} x1={PAD} x2={W - PAD} y1={H - PAD - f * (H - PAD * 2)} y2={H - PAD - f * (H - PAD * 2)}
+            stroke="#e5e7eb" strokeWidth="1" />
+        ))}
+        {/* Fill */}
+        <polygon points={fill} fill={color} fillOpacity="0.08" />
+        {/* Line */}
+        <polyline points={polyline} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Dots */}
+        {values.map((v, i) => {
+          const [x, y] = pts[i].split(',');
+          return v > 0 ? <circle key={i} cx={x} cy={y} r="2.5" fill={color} /> : null;
+        })}
+        {/* Date labels */}
+        {dateLabels.map(({ i, label: lbl }) => {
+          const [x] = pts[i].split(',');
+          return <text key={i} x={x} y={H + 12} textAnchor="middle" fontSize="8" fill="#9ca3af">{lbl}</text>;
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function BarChart({ data, color = '#7c3aed', label }) {
+  if (!data?.length) return null;
+  const W = 500, H = 120, PAD = 8;
+  const max = Math.max(...data.map((d) => d.count), 1);
+  const barW = (W - PAD * 2) / data.length;
+
+  return (
+    <div>
+      {label && <p className="text-xs font-medium text-gray-500 mb-2">{label}</p>}
+      <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full">
+        {data.map((d, i) => {
+          const bh = ((d.count / max) * (H - PAD * 2));
+          const x = PAD + i * barW + barW * 0.1;
+          const y = H - PAD - bh;
+          const w = barW * 0.8;
+          const name = d.name.length > 8 ? d.name.slice(0, 7) + '…' : d.name;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={w} height={bh} rx="3" fill={color} fillOpacity="0.85" />
+              <text x={x + w / 2} y={H + 10} textAnchor="middle" fontSize="7.5" fill="#6b7280">{name}</text>
+              {d.count > 0 && <text x={x + w / 2} y={y - 3} textAnchor="middle" fontSize="8" fill={color} fontWeight="600">{d.count}</text>}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ------------------------------------------------
+
 export default function AdminPage() {
   const [tab, setTab] = useState('listings');
   const [data, setData] = useState([]);
@@ -45,24 +130,43 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats KPI cards */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Total Users', val: stats.users.toLocaleString(), icon: '👤', color: 'bg-blue-50 text-blue-600' },
-            { label: 'Total Listings', val: stats.listings.toLocaleString(), icon: '📦', color: 'bg-green-50 text-green-600' },
-            { label: 'Paid Orders', val: stats.orders.toLocaleString(), icon: '✅', color: 'bg-purple-50 text-purple-600' },
-            { label: 'Revenue', val: `$${stats.revenue.toLocaleString()}`, icon: '💰', color: 'bg-amber-50 text-amber-600' },
-          ].map((s) => (
-            <div key={s.label} className="card p-5 flex items-center gap-4">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${s.color}`}>{s.icon}</div>
-              <div>
-                <p className="text-xl font-extrabold text-gray-900">{s.val}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: 'Total Users', val: stats.users.toLocaleString(), sub: `+${stats.newUsers7d} this week`, icon: '👤', color: 'bg-blue-50 text-blue-600' },
+              { label: 'Active Listings', val: stats.listings.toLocaleString(), sub: `+${stats.newListings7d} this week`, icon: '📦', color: 'bg-green-50 text-green-600' },
+              { label: 'Paid Orders', val: stats.orders.toLocaleString(), sub: 'all time', icon: '✅', color: 'bg-purple-50 text-purple-600' },
+              { label: 'Revenue', val: `$${stats.revenue.toLocaleString()}`, sub: 'all time', icon: '💰', color: 'bg-amber-50 text-amber-600' },
+            ].map((s) => (
+              <div key={s.label} className="card p-5 flex items-center gap-4">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${s.color}`}>{s.icon}</div>
+                <div>
+                  <p className="text-xl font-extrabold text-gray-900">{s.val}</p>
+                  <p className="text-xs text-gray-500 font-medium">{s.label}</p>
+                  <p className="text-xs text-gray-400">{s.sub}</p>
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Charts row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="card p-5 md:col-span-1">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">Revenue — last 30 days</h3>
+              <LineChart data={stats.dailyData} valueKey="revenue" color="#2563eb" />
             </div>
-          ))}
-        </div>
+            <div className="card p-5 md:col-span-1">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">New Users — last 30 days</h3>
+              <LineChart data={stats.dailyData} valueKey="users" color="#059669" />
+            </div>
+            <div className="card p-5 md:col-span-1">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">Listings by Category</h3>
+              <BarChart data={stats.categories} color="#7c3aed" />
+            </div>
+          </div>
+        </>
       )}
 
       {/* Tabs */}

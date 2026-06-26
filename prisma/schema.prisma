@@ -16,11 +16,13 @@ model User {
   bio              String?
   role             Role     @default(BUYER)
   isVerified       Boolean  @default(false)
-  emailVerified    Boolean  @default(false)
-  emailVerifyToken  String?
-  emailVerifyExpires DateTime?
-  resetPasswordToken  String?
+  emailVerified        Boolean   @default(false)
+  emailVerifyToken     String?
+  emailVerifyExpires   DateTime?
+  resetPasswordToken   String?
   resetPasswordExpires DateTime?
+  mfaSecret            String?
+  mfaEnabled           Boolean   @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

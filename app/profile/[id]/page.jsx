@@ -16,6 +16,13 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // MFA state
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaSetup, setMfaSetup] = useState(null); // { secret, qr }
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaDisableToken, setMfaDisableToken] = useState('');
+  const [mfaMsg, setMfaMsg] = useState('');
+
   const isOwn = user?.id === id;
 
   useEffect(() => {
@@ -23,8 +30,31 @@ export default function ProfilePage() {
     fetch(`/api/users/${id}`).then((r) => r.json()).then((d) => {
       setProfile(d);
       setForm({ name: d.name, bio: d.bio || '', role: d.role });
+      if (user?.id === d.id) setMfaEnabled(d.mfaEnabled || false);
     }).finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user]);
+
+  const startMfaSetup = async () => {
+    const res = await fetch('/api/auth/mfa');
+    const d = await res.json();
+    setMfaSetup(d);
+    setMfaToken('');
+    setMfaMsg('');
+  };
+
+  const verifyMfa = async () => {
+    const res = await fetch('/api/auth/mfa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: mfaToken }) });
+    const d = await res.json();
+    if (res.ok) { setMfaEnabled(true); setMfaSetup(null); setMfaMsg('MFA enabled successfully!'); }
+    else setMfaMsg(d.error);
+  };
+
+  const disableMfa = async () => {
+    const res = await fetch('/api/auth/mfa', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: mfaDisableToken }) });
+    const d = await res.json();
+    if (res.ok) { setMfaEnabled(false); setMfaDisableToken(''); setMfaMsg('MFA disabled.'); }
+    else setMfaMsg(d.error);
+  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -118,6 +148,56 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* MFA Section — own profile only */}
+      {isOwn && (
+        <div className="card p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-bold text-gray-900">Two-Factor Authentication</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Add an extra layer of security to your account</p>
+            </div>
+            <span className={`badge text-xs ${mfaEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+              {mfaEnabled ? '✓ Enabled' : 'Disabled'}
+            </span>
+          </div>
+
+          {mfaMsg && <p className={`text-sm mb-4 ${mfaMsg.includes('success') || mfaMsg.includes('disabled') ? 'text-emerald-600' : 'text-red-600'}`}>{mfaMsg}</p>}
+
+          {!mfaEnabled && !mfaSetup && (
+            <button onClick={startMfaSetup} className="btn-primary text-sm">Enable 2FA</button>
+          )}
+
+          {mfaSetup && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">Scan this QR code with <strong>Google Authenticator</strong>, <strong>Authy</strong>, or any TOTP app:</p>
+              <img src={mfaSetup.qr} alt="MFA QR Code" className="w-48 h-48 rounded-xl border border-gray-200" />
+              <p className="text-xs text-gray-400">Can't scan? Enter this code manually: <code className="bg-gray-100 px-2 py-0.5 rounded font-mono text-xs">{mfaSetup.secret}</code></p>
+              <div className="flex items-center gap-3">
+                <input type="text" inputMode="numeric" maxLength={6} placeholder="Enter 6-digit code"
+                  className="input w-44 font-mono text-center tracking-widest" value={mfaToken}
+                  onChange={(e) => setMfaToken(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+                <button onClick={verifyMfa} disabled={mfaToken.length < 6} className="btn-primary text-sm">Verify & Enable</button>
+                <button onClick={() => setMfaSetup(null)} className="btn-secondary text-sm">Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {mfaEnabled && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">2FA is active. Enter your authenticator code below to disable it.</p>
+              <div className="flex items-center gap-3">
+                <input type="text" inputMode="numeric" maxLength={6} placeholder="6-digit code"
+                  className="input w-44 font-mono text-center tracking-widest" value={mfaDisableToken}
+                  onChange={(e) => setMfaDisableToken(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+                <button onClick={disableMfa} disabled={mfaDisableToken.length < 6} className="text-sm px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-medium transition-colors">
+                  Disable 2FA
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {profile.listings?.length > 0 && (
         <div className="mb-8">
