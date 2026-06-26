@@ -86,7 +86,7 @@ export default function HomePage() {
         </div>
 
         {/* Hero image */}
-        <div className="flex-shrink-0 w-full lg:w-[480px]">
+        <div className="flex-shrink-0 w-full lg:w-[960px]">
           <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] bg-blue-100 flex items-center justify-center">
             <img
               src="/marketplace-hero.png"
