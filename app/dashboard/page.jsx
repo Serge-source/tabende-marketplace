@@ -114,9 +114,13 @@ export default function DashboardPage() {
                   <span className={`badge text-xs ${l.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : l.status === 'SOLD' ? 'bg-gray-100 text-gray-500' : 'bg-red-50 text-red-600'}`}>{l.status}</span>
                   {l.isBoosted && <span className="badge text-xs bg-amber-50 text-amber-700">★ Boosted</span>}
                   <span className="text-xs text-gray-400 flex items-center gap-1"><svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>{l._count?.favorites || 0}</span>
-                  {l.expiresAt && l.status === 'ACTIVE' && (() => {
+                  {l.status === 'ACTIVE' && (() => {
+                    if (!l.expiresAt) return <span className="text-xs text-gray-400">No expiry</span>;
                     const daysLeft = Math.ceil((new Date(l.expiresAt) - Date.now()) / (1000 * 60 * 60 * 24));
-                    return daysLeft <= 14 ? <span className="text-xs text-orange-500">Expires in {daysLeft}d</span> : null;
+                    if (daysLeft <= 0) return <span className="text-xs text-red-500 font-medium">Expired</span>;
+                    if (daysLeft <= 7) return <span className="text-xs text-red-500 font-medium">Expires in {daysLeft}d</span>;
+                    if (daysLeft <= 14) return <span className="text-xs text-orange-500">Expires in {daysLeft}d</span>;
+                    return <span className="text-xs text-gray-400">Expires {new Date(l.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>;
                   })()}
                 </div>
               </div>
