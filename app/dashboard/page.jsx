@@ -104,7 +104,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {tab === 'listings' && data.map((l) => (
+          {tab === 'listings' && Array.isArray(data) && data.map((l) => (
             <div key={l.id} className="card p-4 flex items-center gap-4">
               <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
                 {l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}
@@ -145,7 +145,7 @@ export default function DashboardPage() {
             </div>
           ))}
 
-          {tab === 'orders' && data.map((o) => (
+          {tab === 'orders' && Array.isArray(data) && data.map((o) => (
             <div key={o.id} className="card p-4">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
@@ -176,7 +176,7 @@ export default function DashboardPage() {
             </div>
           ))}
 
-          {tab === 'sales' && data.map((o) => (
+          {tab === 'sales' && Array.isArray(data) && data.map((o) => (
             <div key={o.id} className="card p-4">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
@@ -260,7 +260,7 @@ export default function DashboardPage() {
 
           {tab === 'favorites' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {data.map((l) => (
+              {Array.isArray(data) && data.map((l) => (
                 <Link key={l.id} href={`/listings/${l.id}`} className="card overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all">
                   <div className="aspect-[4/3] bg-gray-100">{l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}</div>
                   <div className="p-3"><p className="text-sm font-semibold text-gray-900 truncate">{l.title}</p><p className="text-sm font-bold text-blue-600 mt-1">${l.price.toLocaleString()}</p></div>
