@@ -33,11 +33,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return;
-    if (!['listings', 'orders', 'sales', 'favorites'].includes(tab)) {
+    const validTabs = ['listings', 'orders', 'sales', 'favorites', 'analytics'];
+    if (!validTabs.includes(tab)) {
       setTab(user.role === 'SELLER' || user.role === 'ADMIN' ? 'listings' : 'orders');
       return;
     }
     setLoading(true);
+    setData([]);
     const ep = { listings: '/api/users/me/listings', orders: '/api/orders', sales: '/api/orders/sales', favorites: '/api/users/me/favorites', analytics: '/api/analytics/seller' };
     fetch(ep[tab]).then((r) => r.json()).then(setData).finally(() => setLoading(false));
   }, [tab, user]);
@@ -91,7 +93,7 @@ export default function DashboardPage() {
 
       {loading ? (
         <div className="flex justify-center py-16"><svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg></div>
-      ) : data.length === 0 ? (
+      ) : (Array.isArray(data) && data.length === 0) ? (
         <div className="card p-12 text-center">
           <p className="text-gray-500 font-medium">Nothing here yet</p>
           <p className="text-gray-400 text-sm mt-1">
