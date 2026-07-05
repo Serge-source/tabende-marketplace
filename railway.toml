@@ -3,7 +3,7 @@ builder = "NIXPACKS"
 buildCommand = "npm install && npx prisma generate && rm -rf .next/server .next/static node_modules/.cache/* && DATABASE_URL=postgresql://placeholder/placeholder npm run build"
 
 [deploy]
-startCommand = "npx prisma db push --accept-data-loss && node server.js"
+startCommand = "npx prisma migrate resolve --applied 0_init || true; npx prisma migrate deploy && node server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"

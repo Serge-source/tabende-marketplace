@@ -82,6 +82,12 @@ export default function RegisterPage() {
                 ))}
               </div>
             </div>
+            <label className="flex items-start gap-2.5 mt-2 cursor-pointer">
+              <input type="checkbox" required className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              <span className="text-xs text-gray-500 leading-relaxed">
+                I agree to the <Link href="/terms" className="text-blue-600 hover:underline" target="_blank">Terms of Service</Link> and <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank">Privacy Policy</Link>
+              </span>
+            </label>
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base mt-2">
               {loading ? (
                 <span className="flex items-center gap-2"><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Creating account...</span>
