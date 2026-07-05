@@ -54,6 +54,7 @@ export default function NewListingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ title: '', description: '', price: '', category: '', condition: '', location: '' });
+  const [imageFiles, setImageFiles] = useState([]);
   const [imageDataURLs, setImageDataURLs] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [imgStatus, setImgStatus] = useState(''); // debug status
@@ -66,6 +67,7 @@ export default function NewListingPage() {
     if (!raw.length) return;
     setError('');
     setCompressing(true);
+    setImageFiles(raw);
     setImageDataURLs([]);
     setPreviews([]);
     setImgStatus(`Reading ${raw.length} file(s)...`);
@@ -93,9 +95,29 @@ export default function NewListingPage() {
     setLoading(true);
     setError('');
     try {
-      const payload = { ...form, images: imageDataURLs };
+      // Prefer uploading originals to object storage; fall back to inline
+      // base64 if storage isn't configured (503) so publishing never breaks
+      let images = imageDataURLs;
+      if (imageFiles.length) {
+        try {
+          const fd = new FormData();
+          imageFiles.forEach((f) => fd.append('files', f));
+          const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+          if (upRes.ok) {
+            const up = await upRes.json();
+            images = up.urls;
+          } else if (upRes.status !== 503) {
+            const up = await upRes.json().catch(() => ({}));
+            throw new Error(up.error || 'Image upload failed');
+          }
+        } catch (err) {
+          if (err.message && err.message !== 'Failed to fetch') throw err;
+        }
+      }
+
+      const payload = { ...form, images };
       const payloadKB = Math.round(JSON.stringify(payload).length / 1024);
-      console.log(`[publish] sending ${imageDataURLs.length} images, payload ${payloadKB} KB`);
+      console.log(`[publish] sending ${images.length} images, payload ${payloadKB} KB`);
 
       const res = await fetch('/api/listings', {
         method: 'POST',

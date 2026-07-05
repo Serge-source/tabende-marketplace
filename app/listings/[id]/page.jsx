@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import ListingClient from './ListingClient';
 
 export async function generateMetadata({ params }) {
