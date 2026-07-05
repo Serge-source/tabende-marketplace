@@ -14,6 +14,7 @@ export async function GET(request) {
       reporter: { select: { id: true, name: true, email: true } },
       reportedUser: { select: { id: true, name: true, email: true } },
       listing: { select: { id: true, title: true, status: true } },
+      order: { select: { id: true, amount: true, status: true } },
     },
   });
 

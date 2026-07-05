@@ -118,6 +118,19 @@ export default function AdminPage() {
     setData((prev) => prev.map((u) => u.id === id ? { ...u, ...body } : u));
   };
 
+  const refundOrder = async (report) => {
+    if (!window.confirm(`Refund $${report.order.amount.toLocaleString()} to the buyer and resolve this dispute?`)) return;
+    const res = await fetch(`/api/admin/orders/${report.order.id}/refund`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ relist: false, resolveReportId: report.id }),
+    });
+    const d = await res.json();
+    if (!res.ok) { alert(d.error || 'Refund failed'); return; }
+    setData((prev) => prev.map((r) => r.id === report.id
+      ? { ...r, status: 'RESOLVED', order: { ...r.order, status: 'REFUNDED' } } : r));
+  };
+
   return (
     <div className="section py-8">
       <div className="flex items-center gap-3 mb-8">
@@ -249,7 +262,12 @@ export default function AdminPage() {
                 </p>
               </div>
               {r.status === 'PENDING' && (
-                <div className="flex gap-1.5 flex-shrink-0">
+                <div className="flex gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                  {r.order?.status === 'PAID' && (
+                    <button onClick={() => refundOrder(r)} className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 font-semibold">
+                      Refund ${r.order.amount.toLocaleString()}
+                    </button>
+                  )}
                   <button onClick={() => resolveReport(r.id, 'RESOLVED')} className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-100 font-medium">Resolve</button>
                   <button onClick={() => resolveReport(r.id, 'DISMISSED')} className="text-xs bg-gray-50 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 font-medium">Dismiss</button>
                 </div>

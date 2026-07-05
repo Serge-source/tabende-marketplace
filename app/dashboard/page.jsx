@@ -30,6 +30,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [reviewOrder, setReviewOrder] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [disputeOrder, setDisputeOrder] = useState(null);
+  const [disputeForm, setDisputeForm] = useState({ reason: 'ITEM_NOT_RECEIVED', description: '' });
+  const [disputeMsg, setDisputeMsg] = useState('');
+  const [actionBusy, setActionBusy] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -50,6 +54,29 @@ export default function DashboardPage() {
       setData((prev) => prev.map((o) => o.id === reviewOrder.id ? { ...o, review: { rating: reviewForm.rating } } : o));
       setReviewOrder(null);
     }
+  };
+
+  const cancelOrder = async (orderId, confirmText) => {
+    if (!window.confirm(confirmText)) return;
+    setActionBusy(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/cancel`, { method: 'POST' });
+      const d = await res.json();
+      if (!res.ok) { alert(d.error || 'Cancellation failed'); return; }
+      setData((prev) => prev.map((o) => o.id === orderId ? { ...o, status: d.status } : o));
+    } finally { setActionBusy(null); }
+  };
+
+  const submitDispute = async () => {
+    setDisputeMsg('');
+    const res = await fetch(`/api/orders/${disputeOrder.id}/dispute`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(disputeForm),
+    });
+    const d = await res.json();
+    if (!res.ok) { setDisputeMsg(d.error || 'Failed to open dispute'); return; }
+    setDisputeOrder(null);
+    setDisputeForm({ reason: 'ITEM_NOT_RECEIVED', description: '' });
+    alert('Dispute submitted — our team will review it and get back to you.');
   };
 
   const updateShipping = async (orderId, shippingStatus) => {
@@ -159,10 +186,24 @@ export default function DashboardPage() {
                     <span className={`badge text-xs ${o.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{o.status}</span>
                   </div>
                 </div>
-                {o.status === 'PAID' && !o.review && (
-                  <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5 flex-shrink-0">Rate Seller</button>
-                )}
-                {o.review && <div className="flex items-center gap-0.5 flex-shrink-0"><span className="text-amber-400 text-sm">{'★'.repeat(o.review.rating)}</span></div>}
+                <div className="flex flex-col gap-1.5 flex-shrink-0 items-end">
+                  {o.status === 'PENDING' && (
+                    <button onClick={() => cancelOrder(o.id, 'Cancel this order?')} disabled={actionBusy === o.id}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 font-medium">
+                      Cancel Order
+                    </button>
+                  )}
+                  {o.status === 'PAID' && !o.review && (
+                    <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5">Rate Seller</button>
+                  )}
+                  {o.review && <div className="flex items-center gap-0.5"><span className="text-amber-400 text-sm">{'★'.repeat(o.review.rating)}</span></div>}
+                  {o.status === 'PAID' && (
+                    <button onClick={() => setDisputeOrder(o)}
+                      className="text-xs text-gray-400 hover:text-red-500 transition-colors">
+                      Report a problem
+                    </button>
+                  )}
+                </div>
               </div>
               {o.status === 'PAID' && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
@@ -191,10 +232,18 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 {o.status === 'PAID' && (
-                  <div className="flex-shrink-0">
+                  <div className="flex flex-col gap-1.5 flex-shrink-0 items-end">
                     <select value={o.shippingStatus} onChange={(e) => updateShipping(o.id, e.target.value)} className="input text-xs w-auto py-1.5">
                       {SHIP_STEPS.map((s) => <option key={s} value={s}>{SHIP_LABELS[s]}</option>)}
                     </select>
+                    {o.shippingStatus === 'ORDER_PLACED' && (
+                      <button
+                        onClick={() => cancelOrder(o.id, `Cancel this sale and refund the buyer $${o.amount.toLocaleString()}? The listing will be reactivated.`)}
+                        disabled={actionBusy === o.id}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-medium">
+                        {actionBusy === o.id ? 'Refunding...' : 'Cancel & Refund'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -278,6 +327,35 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Dispute modal */}
+      {disputeOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="card p-6 w-full max-w-sm">
+            <h3 className="font-bold text-gray-900 mb-1">Report a problem</h3>
+            <p className="text-sm text-gray-500 mb-4">Order: <span className="font-medium">{disputeOrder.listing?.title}</span> · ${disputeOrder.amount.toLocaleString()}</p>
+            {disputeMsg && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{disputeMsg}</div>}
+            <div className="space-y-3 mb-4">
+              <select className="input text-sm" value={disputeForm.reason}
+                onChange={(e) => setDisputeForm((f) => ({ ...f, reason: e.target.value }))}>
+                <option value="ITEM_NOT_RECEIVED">Item not received</option>
+                <option value="NOT_AS_DESCRIBED">Item not as described</option>
+                <option value="OTHER">Other issue</option>
+              </select>
+              <textarea rows={4} className="input resize-none text-sm"
+                placeholder="Describe what happened (minimum 20 characters). Include dates and any details that help us review."
+                value={disputeForm.description}
+                onChange={(e) => setDisputeForm((f) => ({ ...f, description: e.target.value }))} />
+              <p className="text-xs text-gray-400">Tip: message the seller first — most issues are resolved directly. Disputes are reviewed by the Tabende team.</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={submitDispute} disabled={disputeForm.description.trim().length < 20}
+                className="btn-danger flex-1 text-sm">Submit Dispute</button>
+              <button onClick={() => { setDisputeOrder(null); setDisputeMsg(''); }} className="btn-secondary flex-1 text-sm">Cancel</button>
+            </div>
+          </div>
         </div>
       )}
 
