@@ -15,13 +15,33 @@ export async function POST(request) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
+  if (event.type === 'checkout.session.expired') {
+    const session = event.data.object;
+    await prisma.order.updateMany({
+      where: { stripeSessionId: session.id, status: 'PENDING' },
+      data: { status: 'CANCELLED' },
+    });
+    return NextResponse.json({ received: true });
+  }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const { listingId } = session.metadata;
 
+    // Stripe puts the collected address on shipping_details (falls back to
+    // billing details if shipping collection was off for this session)
+    const ship = session.shipping_details || session.customer_details;
+    const shippingAddress = ship?.address
+      ? { name: ship.name || session.customer_details?.name || null, ...ship.address }
+      : undefined;
+
     await prisma.order.updateMany({
       where: { stripeSessionId: session.id },
-      data: { status: 'PAID', stripePaymentId: session.payment_intent },
+      data: {
+        status: 'PAID',
+        stripePaymentId: session.payment_intent,
+        ...(shippingAddress && { shippingAddress }),
+      },
     });
     await prisma.listing.update({ where: { id: listingId }, data: { status: 'SOLD' } });
 

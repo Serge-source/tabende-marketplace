@@ -106,6 +106,7 @@ model Order {
   sellerPayout    Float          @default(0)
   status          OrderStatus    @default(PENDING)
   shippingStatus  ShippingStatus @default(ORDER_PLACED)
+  shippingAddress Json?
   stripeSessionId String?
   stripePaymentId String?
   createdAt       DateTime       @default(now())

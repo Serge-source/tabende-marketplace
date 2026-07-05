@@ -198,6 +198,16 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+              {o.status === 'PAID' && o.shippingAddress && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Ship to</p>
+                  <p className="text-sm text-gray-700">
+                    {[o.shippingAddress.name, o.shippingAddress.line1, o.shippingAddress.line2,
+                      [o.shippingAddress.city, o.shippingAddress.state, o.shippingAddress.postal_code].filter(Boolean).join(', '),
+                      o.shippingAddress.country].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+              )}
             </div>
           ))}
 

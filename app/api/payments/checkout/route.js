@@ -45,6 +45,9 @@ export async function POST(request) {
         quantity: 1,
       }],
       mode: 'payment',
+      shipping_address_collection: {
+        allowed_countries: (process.env.SHIPPING_COUNTRIES || 'US,CA,GB,NL,CW,AW,SX,BQ').split(','),
+      },
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/listings/${listingId}`,
       metadata: { listingId, buyerId: user.id, sellerId: listing.sellerId },
