@@ -17,6 +17,36 @@ export default function ListingDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ reason: 'SPAM', description: '' });
   const [reportSent, setReportSent] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [offerLoading, setOfferLoading] = useState(false);
+  const [offerError, setOfferError] = useState('');
+  const [myOffer, setMyOffer] = useState(null);
+
+  useEffect(() => {
+    if (!user || !listing || user.id === listing.sellerId) return;
+    fetch(`/api/offers?listingId=${id}`).then((r) => r.ok ? r.json() : []).then((offers) => {
+      const live = (offers || []).find((o) => ['PENDING', 'ACCEPTED'].includes(o.status));
+      if (live) setMyOffer(live);
+    }).catch(() => {});
+  }, [user, listing, id]);
+
+  const submitOffer = async () => {
+    setOfferLoading(true); setOfferError('');
+    try {
+      const res = await fetch('/api/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: id, amount: Number(offerAmount) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setMyOffer(data);
+      setOfferOpen(false);
+      router.push(`/messages/${data.conversationId}`);
+    } catch (err) { setOfferError(err.message); }
+    setOfferLoading(false);
+  };
 
   useEffect(() => {
     fetch(`/api/listings/${id}`).then(async (r) => {
@@ -149,15 +179,35 @@ export default function ListingDetailPage() {
           {error && <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>}
 
           {!isSeller && isAvailable && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button onClick={handleBuy} disabled={buyLoading} className="btn-primary py-4 flex-1 text-base font-bold rounded-2xl">
-                {buyLoading ? 'Redirecting to checkout...' : '🛒 Buy Now'}
-              </button>
-              <button onClick={handleMessage} disabled={msgLoading} className="btn-secondary py-4 flex-1 text-base rounded-2xl flex items-center justify-center gap-2">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                {msgLoading ? 'Opening chat...' : 'Message Seller'}
-              </button>
-            </div>
+            <>
+              {myOffer?.status === 'ACCEPTED' && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium">
+                  🎉 Your offer of ${myOffer.amount.toLocaleString()} was accepted — Buy Now will checkout at that price.
+                </div>
+              )}
+              {myOffer?.status === 'PENDING' && (
+                <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
+                  Your offer of ${myOffer.amount.toLocaleString()} is waiting for the seller&apos;s response.
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button onClick={handleBuy} disabled={buyLoading} className="btn-primary py-4 flex-1 text-base font-bold rounded-2xl">
+                  {buyLoading ? 'Redirecting to checkout...'
+                    : myOffer?.status === 'ACCEPTED' ? `🛒 Buy for $${myOffer.amount.toLocaleString()}` : '🛒 Buy Now'}
+                </button>
+                {!myOffer && (
+                  <button
+                    onClick={() => { if (!user) return router.push(`/login?from=/listings/${id}`); setOfferOpen(true); }}
+                    className="py-4 flex-1 text-base font-semibold rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+                    💰 Make an Offer
+                  </button>
+                )}
+                <button onClick={handleMessage} disabled={msgLoading} className="btn-secondary py-4 flex-1 text-base rounded-2xl flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                  {msgLoading ? 'Opening chat...' : 'Message Seller'}
+                </button>
+              </div>
+            </>
           )}
           {!isAvailable && !isSeller && (
             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-center text-sm text-gray-500 font-medium">This item is no longer available</div>
@@ -202,6 +252,38 @@ export default function ListingDetailPage() {
           </div>
         </div>
       </div>
+      {/* Offer modal */}
+      {offerOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="card p-6 w-full max-w-sm">
+            <h3 className="font-bold text-gray-900 mb-1">Make an offer</h3>
+            <p className="text-sm text-gray-500 mb-4">Asking price: <span className="font-semibold text-gray-700">${listing.price.toLocaleString()}</span> · offers expire after 48 hours</p>
+            {offerError && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{offerError}</div>}
+            <div className="relative mb-4">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+              <input type="number" min="1" step="0.01" autoFocus placeholder="Your offer"
+                className="input pl-8 text-lg font-semibold" value={offerAmount}
+                onChange={(e) => setOfferAmount(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && offerAmount) submitOffer(); }} />
+            </div>
+            <div className="flex gap-2 mb-4">
+              {[0.9, 0.8, 0.7].map((f) => (
+                <button key={f} onClick={() => setOfferAmount(String(Math.round(listing.price * f)))}
+                  className="flex-1 text-xs py-2 rounded-lg bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 font-medium">
+                  ${Math.round(listing.price * f).toLocaleString()} ({Math.round(f * 100)}%)
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={submitOffer} disabled={offerLoading || !offerAmount} className="btn-primary flex-1">
+                {offerLoading ? 'Sending...' : 'Send Offer'}
+              </button>
+              <button onClick={() => { setOfferOpen(false); setOfferError(''); }} className="btn-secondary flex-1">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Report modal */}
       {reportOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">

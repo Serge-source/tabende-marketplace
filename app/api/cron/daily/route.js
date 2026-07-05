@@ -36,7 +36,14 @@ export async function POST(request) {
   });
   results.staleOrdersCancelled = staleOrders.count;
 
-  // 3. Warn sellers about listings expiring within 7 days (once per listing)
+  // 3. Expire pending offers past their 48h window
+  const expiredOffers = await prisma.offer.updateMany({
+    where: { status: 'PENDING', expiresAt: { lt: now } },
+    data: { status: 'EXPIRED' },
+  });
+  results.offersExpired = expiredOffers.count;
+
+  // 4. Warn sellers about listings expiring within 7 days (once per listing)
   const soon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const expiring = await prisma.listing.findMany({
     where: { status: 'ACTIVE', expiresAt: { gt: now, lt: soon } },

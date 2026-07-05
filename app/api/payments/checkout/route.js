@@ -20,8 +20,20 @@ export async function POST(request) {
     if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Listing not available' }, { status: 400 });
     if (listing.sellerId === user.id) return NextResponse.json({ error: 'Cannot buy your own listing' }, { status: 400 });
 
-    const commission = Math.round(listing.price * COMMISSION_RATE * 100) / 100;
-    const sellerPayout = Math.round((listing.price - commission) * 100) / 100;
+    // An accepted (unexpired) offer overrides the asking price for this buyer
+    const acceptedOffer = await prisma.offer.findFirst({
+      where: {
+        listingId,
+        buyerId: user.id,
+        status: 'ACCEPTED',
+        expiresAt: { gt: new Date(Date.now() - 48 * 60 * 60 * 1000) },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    const salePrice = acceptedOffer ? acceptedOffer.amount : listing.price;
+
+    const commission = Math.round(salePrice * COMMISSION_RATE * 100) / 100;
+    const sellerPayout = Math.round((salePrice - commission) * 100) / 100;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -40,7 +52,7 @@ export async function POST(request) {
             description: listing.description?.slice(0, 200) || '',
             ...(stripeImages.length > 0 && { images: stripeImages }),
           },
-          unit_amount: Math.round(listing.price * 100),
+          unit_amount: Math.round(salePrice * 100),
         },
         quantity: 1,
       }],
@@ -58,7 +70,7 @@ export async function POST(request) {
         listingId,
         buyerId: user.id,
         sellerId: listing.sellerId,
-        amount: listing.price,
+        amount: salePrice,
         commission,
         sellerPayout,
         status: 'PENDING',

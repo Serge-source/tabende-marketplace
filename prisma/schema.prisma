@@ -38,6 +38,8 @@ model User {
   reports             Report[]       @relation("ReportsFiled")
   reportsReceived     Report[]       @relation("ReportsReceived")
   notifications       Notification[]
+  offersAsBuyer       Offer[]        @relation("BuyerOffers")
+  offersAsSeller      Offer[]        @relation("SellerOffers")
 
   @@index([email])
   @@index([role])
@@ -75,6 +77,7 @@ model Listing {
   conversations Conversation[]
   favorites     Favorite[]
   reports       Report[]
+  offers        Offer[]
 
   @@index([sellerId])
   @@index([status])
@@ -230,6 +233,37 @@ enum ReportStatus {
   REVIEWING
   RESOLVED
   DISMISSED
+}
+
+model Offer {
+  id          String      @id @default(cuid())
+  listingId   String
+  listing     Listing     @relation(fields: [listingId], references: [id])
+  buyerId     String
+  buyer       User        @relation("BuyerOffers", fields: [buyerId], references: [id])
+  sellerId    String
+  seller      User        @relation("SellerOffers", fields: [sellerId], references: [id])
+  createdById String // who made this offer: buyer, or seller for counters
+  amount      Float
+  status      OfferStatus @default(PENDING)
+  parentId    String? // previous offer in a counter chain
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  CANCELLED
+  EXPIRED
 }
 
 model Notification {

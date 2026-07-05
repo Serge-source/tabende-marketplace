@@ -16,6 +16,10 @@ export default function MessagesPage() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [activeOffer, setActiveOffer] = useState(null);
+  const [counterOpen, setCounterOpen] = useState(false);
+  const [counterAmount, setCounterAmount] = useState('');
+  const [offerBusy, setOfferBusy] = useState(false);
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
@@ -51,8 +55,41 @@ export default function MessagesPage() {
       setActive(data);
       setMessages(data.messages);
       socketRef.current?.emit('join_conversation', convId);
+      if (data.listing?.id) fetchOffers(data.listing.id);
     });
   }, [convId, conversations.length]);
+
+  const fetchOffers = async (listingId) => {
+    try {
+      const res = await fetch(`/api/offers?listingId=${listingId}`);
+      if (!res.ok) return;
+      const offers = await res.json();
+      setActiveOffer((offers || []).find((o) => ['PENDING', 'ACCEPTED'].includes(o.status)) || null);
+    } catch {}
+  };
+
+  const offerAction = async (action, extra = {}) => {
+    if (!activeOffer) return;
+    setOfferBusy(true);
+    try {
+      const res = await fetch(`/api/offers/${activeOffer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...extra }),
+      });
+      if (res.ok) {
+        setCounterOpen(false);
+        setCounterAmount('');
+        // reload offers and messages so the auto-message shows up
+        if (active?.listing?.id) fetchOffers(active.listing.id);
+        const cr = await fetch(`/api/messages/conversations/${convId}`);
+        if (cr.ok) { const d = await cr.json(); setMessages(d.messages); }
+      } else {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || 'Action failed');
+      }
+    } finally { setOfferBusy(false); }
+  };
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, typing]);
 
@@ -135,6 +172,62 @@ export default function MessagesPage() {
                 </p>
               </div>
             </div>
+
+            {/* Active offer banner */}
+            {activeOffer && (
+              <div className={`px-5 py-3 border-b ${activeOffer.status === 'ACCEPTED' ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="text-sm">
+                    {activeOffer.status === 'ACCEPTED' ? (
+                      <span className="text-emerald-700 font-medium">
+                        ✅ Offer accepted: <strong>${activeOffer.amount.toLocaleString()}</strong>
+                        {user?.id === activeOffer.buyerId && <> — <Link href={`/listings/${active.listing?.id}`} className="underline font-semibold">complete checkout</Link></>}
+                      </span>
+                    ) : (
+                      <span className="text-amber-800">
+                        💰 {activeOffer.createdById === user?.id ? 'Your offer' : `Offer ${activeOffer.createdById === activeOffer.sellerId ? '(counter) ' : ''}from ${otherUser?.name}`}:{' '}
+                        <strong>${activeOffer.amount.toLocaleString()}</strong>
+                        <span className="text-amber-600 text-xs ml-2">expires {new Date(activeOffer.expiresAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </span>
+                    )}
+                  </div>
+                  {activeOffer.status === 'PENDING' && (
+                    <div className="flex gap-2">
+                      {activeOffer.createdById !== user?.id ? (
+                        <>
+                          <button onClick={() => offerAction('accept')} disabled={offerBusy}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-semibold">Accept</button>
+                          <button onClick={() => setCounterOpen(true)} disabled={offerBusy}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-white text-amber-700 border border-amber-300 hover:bg-amber-100 font-semibold">Counter</button>
+                          <button onClick={() => offerAction('decline')} disabled={offerBusy}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-white text-red-600 border border-red-200 hover:bg-red-50 font-semibold">Decline</button>
+                        </>
+                      ) : (
+                        <button onClick={() => offerAction('cancel')} disabled={offerBusy}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 font-medium">Withdraw</button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {counterOpen && (
+                  <div className="flex items-center gap-2 mt-2.5">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">$</span>
+                      <input type="number" min="1" step="0.01" autoFocus value={counterAmount}
+                        onChange={(e) => setCounterAmount(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && counterAmount) offerAction('counter', { counterAmount: Number(counterAmount) }); }}
+                        placeholder="Counter amount"
+                        className="input pl-7 py-1.5 text-sm w-40" />
+                    </div>
+                    <button onClick={() => offerAction('counter', { counterAmount: Number(counterAmount) })}
+                      disabled={offerBusy || !counterAmount}
+                      className="text-xs px-3 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 font-semibold">Send Counter</button>
+                    <button onClick={() => { setCounterOpen(false); setCounterAmount(''); }}
+                      className="text-xs px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-100 font-medium">Cancel</button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-gray-50">
