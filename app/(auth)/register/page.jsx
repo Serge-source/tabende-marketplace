@@ -27,7 +27,8 @@ function RegisterForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       login(data.user);
-      router.push('/dashboard');
+      // Hard navigation clears the pre-auth router cache (see login page)
+      window.location.assign('/dashboard');
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {

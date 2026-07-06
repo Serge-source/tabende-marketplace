@@ -36,7 +36,9 @@ function LoginForm() {
       login(data.user);
       // Admins land on the admin panel unless they were headed somewhere specific
       const dest = data.user.role === 'ADMIN' && from === '/dashboard' ? '/admin' : from;
-      router.push(dest);
+      // Hard navigation: the router cache holds pre-auth redirects for
+      // prefetched links, so a client-side push would bounce back to /login
+      window.location.assign(dest);
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

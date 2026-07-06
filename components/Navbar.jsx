@@ -78,7 +78,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/');
+    window.location.assign('/');
   };
 
   return (
