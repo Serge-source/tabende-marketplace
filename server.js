@@ -27,7 +27,13 @@ app.prepare().then(() => {
   global._io = io;
 
   io.use(async (socket, next) => {
-    const token = socket.handshake.auth?.token;
+    // JWT lives in an httpOnly cookie, so read it from the handshake
+    // headers (same-origin) with auth.token as a fallback for API clients
+    let token = socket.handshake.auth?.token;
+    if (!token && socket.handshake.headers.cookie) {
+      const match = socket.handshake.headers.cookie.match(/(?:^|;\s*)tab_token=([^;]+)/);
+      if (match) token = decodeURIComponent(match[1]);
+    }
     if (!token) return next(new Error('No token'));
     try {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET);

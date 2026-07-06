@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import { useTheme } from './ThemeProvider';
+import { io } from 'socket.io-client';
 
 const NAV_LINKS = [
   { href: '/browse', label: 'Browse' },
@@ -37,9 +38,21 @@ export default function Navbar() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    // Polling is only a fallback — real-time delivery comes over the socket
+    const interval = setInterval(fetchNotifications, 120000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
+
+  useEffect(() => {
+    if (!user) return;
+    // Authenticates via the tab_token httpOnly cookie on the handshake
+    const socket = io({ path: '/api/socket' });
+    socket.on('notification', (n) => {
+      setNotifications((prev) => [n, ...prev].slice(0, 20));
+      setUnreadCount((c) => c + 1);
+    });
+    return () => socket.disconnect();
+  }, [user]);
 
   const markAllRead = async () => {
     await fetch('/api/notifications', { method: 'PUT' });

@@ -30,7 +30,8 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!user) return;
-    const socket = io({ path: '/api/socket', auth: { token: '' } });
+    // Authenticates via the tab_token httpOnly cookie on the handshake
+    const socket = io({ path: '/api/socket' });
     socketRef.current = socket;
 
     socket.on('new_message', (msg) => {
