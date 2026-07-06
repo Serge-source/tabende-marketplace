@@ -52,6 +52,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://placeholder/placeholder
           JWT_SECRET: ci-e2e-secret
+          NEXT_PUBLIC_DISABLE_SW: '1'
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
