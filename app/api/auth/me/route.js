@@ -16,9 +16,11 @@ export async function GET(request) {
   }
 
   const res = NextResponse.json(me);
-  // Token claims (role/name) can go stale after an admin change — re-issue
-  // the cookie so middleware and API guards see the current values
-  if (me.role !== user.role || me.name !== user.name) {
+  // Sliding session: re-issue when claims went stale (role/name changed)
+  // or the token is over an hour old, so active users never hit the 24h
+  // expiry while inactive sessions lapse within a day
+  const tokenAgeSec = user.iat ? Math.floor(Date.now() / 1000) - user.iat : Infinity;
+  if (me.role !== user.role || me.name !== user.name || tokenAgeSec > 3600) {
     const fresh = await signToken({ id: me.id, email: me.email, role: me.role, name: me.name });
     setTokenCookie(res, fresh);
   }

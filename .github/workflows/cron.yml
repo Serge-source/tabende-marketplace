@@ -1,0 +1,17 @@
+name: Daily maintenance
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 06:00 UTC daily
+  workflow_dispatch: {}
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger daily maintenance endpoint
+        run: |
+          set -e
+          RESPONSE=$(curl -sf -X POST "${{ secrets.APP_URL }}/api/cron/daily" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          echo "$RESPONSE"
