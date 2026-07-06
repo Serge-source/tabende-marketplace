@@ -2,7 +2,6 @@ import { prisma } from '@/lib/prisma';
 import ListingClient from './ListingClient';
 
 export async function generateMetadata({ params }) {
-  const base = process.env.NEXT_PUBLIC_APP_URL || 'https://tabende-marketplace-production.up.railway.app';
   try {
     const listing = await prisma.listing.findUnique({
       where: { id: params.id },
@@ -11,8 +10,9 @@ export async function generateMetadata({ params }) {
     if (!listing) return { title: 'Listing Not Found' };
 
     const description = listing.description?.slice(0, 155) || `${listing.category} listing on Tabende`;
-    const image = listing.images?.[0] ? `${base}${listing.images[0]}` : undefined;
 
+    // og:image comes from the opengraph-image.jsx file convention,
+    // which renders a branded card with the listing photo
     return {
       title: listing.title,
       description,
@@ -20,7 +20,6 @@ export async function generateMetadata({ params }) {
         title: `${listing.title} — $${listing.price}`,
         description,
         type: 'website',
-        ...(image && { images: [{ url: image, width: 800, height: 600 }] }),
       },
       twitter: { card: 'summary_large_image', title: listing.title, description },
     };
