@@ -60,6 +60,12 @@ jobs:
         run: |
           NODE_ENV=production node server.js &
           npx wait-on http://localhost:3000 --timeout 60000 || sleep 15
+          echo "--- auth flow debug ---"
+          COOKIE=$(curl -s -i -X POST http://localhost:3000/api/auth/register -H "Content-Type: application/json" -d '{"name":"Debug Probe","email":"debug-probe@example.com","password":"Probe12345!","role":"BUYER"}' | tee /tmp/reg.out | grep -io 'tab_token=[^;]*' | head -1)
+          head -1 /tmp/reg.out
+          echo "cookie: ${COOKIE:0:40}..."
+          curl -s -o /dev/null -w "/dashboard with cookie -> %{http_code} redirect=%{redirect_url}\n" -H "Cookie: $COOKIE" http://localhost:3000/dashboard
+          echo "--- end debug ---"
           npx playwright test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
