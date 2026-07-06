@@ -23,6 +23,28 @@ export default function ProfilePage() {
   const [mfaDisableToken, setMfaDisableToken] = useState('');
   const [mfaMsg, setMfaMsg] = useState('');
 
+  // Change password state
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+
+  const changePassword = async () => {
+    setPwMsg('');
+    if (pwForm.next !== pwForm.confirm) { setPwMsg('New passwords do not match'); return; }
+    setPwSaving(true);
+    try {
+      const res = await fetch('/api/users/me/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setPwMsg(d.error || 'Failed to change password'); return; }
+      setPwForm({ current: '', next: '', confirm: '' });
+      setPwMsg('Password changed successfully!');
+    } finally { setPwSaving(false); }
+  };
+
   const isOwn = user?.id === id;
 
   useEffect(() => {
@@ -148,6 +170,27 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Change password — own profile only */}
+      {isOwn && (
+        <div className="card p-6 mb-6">
+          <h2 className="text-base font-bold text-gray-900">Change Password</h2>
+          <p className="text-sm text-gray-500 mt-0.5 mb-4">Use at least 8 characters. You&apos;ll stay signed in after changing it.</p>
+          {pwMsg && <p className={`text-sm mb-4 ${pwMsg.includes('success') ? 'text-emerald-600' : 'text-red-600'}`}>{pwMsg}</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <input type="password" autoComplete="current-password" placeholder="Current password" className="input text-sm"
+              value={pwForm.current} onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))} />
+            <input type="password" autoComplete="new-password" placeholder="New password" className="input text-sm"
+              value={pwForm.next} onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))} />
+            <input type="password" autoComplete="new-password" placeholder="Confirm new password" className="input text-sm"
+              value={pwForm.confirm} onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))} />
+          </div>
+          <button onClick={changePassword} disabled={pwSaving || !pwForm.current || pwForm.next.length < 8 || !pwForm.confirm}
+            className="btn-primary text-sm">
+            {pwSaving ? 'Saving...' : 'Update Password'}
+          </button>
+        </div>
+      )}
 
       {/* MFA Section — own profile only */}
       {isOwn && (
