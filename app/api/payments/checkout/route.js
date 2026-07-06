@@ -32,6 +32,15 @@ export async function POST(request) {
     });
     const salePrice = acceptedOffer ? acceptedOffer.amount : listing.price;
 
+    // Store credit reduces what the buyer pays (Stripe minimum charge $0.50);
+    // seller payout and commission stay based on the full sale price
+    const buyerAccount = await prisma.user.findUnique({ where: { id: user.id }, select: { creditBalance: true } });
+    const creditUsed = Math.max(0, Math.min(
+      Math.round((buyerAccount?.creditBalance || 0) * 100) / 100,
+      salePrice - 0.5
+    ));
+    const chargeAmount = Math.round((salePrice - creditUsed) * 100) / 100;
+
     const commission = Math.round(salePrice * COMMISSION_RATE * 100) / 100;
     const sellerPayout = Math.round((salePrice - commission) * 100) / 100;
 
@@ -52,7 +61,7 @@ export async function POST(request) {
             description: listing.description?.slice(0, 200) || '',
             ...(stripeImages.length > 0 && { images: stripeImages }),
           },
-          unit_amount: Math.round(salePrice * 100),
+          unit_amount: Math.round(chargeAmount * 100),
         },
         quantity: 1,
       }],
@@ -73,6 +82,7 @@ export async function POST(request) {
         amount: salePrice,
         commission,
         sellerPayout,
+        creditUsed,
         status: 'PENDING',
         stripeSessionId: session.id,
       },

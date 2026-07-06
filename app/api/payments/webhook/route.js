@@ -55,6 +55,35 @@ export async function POST(request) {
       },
     });
     if (order) {
+      // Deduct any store credit the buyer applied at checkout
+      if (order.creditUsed > 0) {
+        await prisma.user.update({
+          where: { id: order.buyerId },
+          data: { creditBalance: { decrement: order.creditUsed } },
+        }).catch(console.error);
+      }
+
+      // Referral bonus: referrer earns $5 when their referee completes a first purchase
+      const buyerFull = await prisma.user.findUnique({
+        where: { id: order.buyerId },
+        select: { referredById: true, name: true },
+      });
+      if (buyerFull?.referredById) {
+        const paidOrders = await prisma.order.count({ where: { buyerId: order.buyerId, status: 'PAID' } });
+        if (paidOrders === 1) {
+          await prisma.user.update({
+            where: { id: buyerFull.referredById },
+            data: { creditBalance: { increment: 5 } },
+          }).catch(console.error);
+          createNotification(buyerFull.referredById, {
+            type: 'ORDER_UPDATE',
+            title: 'Referral bonus earned! 🎉',
+            body: `${buyerFull.name} made their first purchase — $5 credit was added to your account.`,
+            href: '/dashboard',
+          }).catch(console.error);
+        }
+      }
+
       sendOrderConfirmationEmail(order).catch(console.error);
       sendSaleNotificationEmail(order).catch(console.error);
       createNotification(order.buyerId, {

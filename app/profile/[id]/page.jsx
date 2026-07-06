@@ -47,6 +47,22 @@ export default function ProfilePage() {
 
   const isOwn = user?.id === id;
 
+  // Referral state
+  const [referral, setReferral] = useState(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!isOwn) return;
+    fetch('/api/referrals').then((r) => r.ok ? r.json() : null).then(setReferral).catch(() => {});
+  }, [isOwn]);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referral.link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
   // Block state
   const [blocked, setBlocked] = useState(false);
   useEffect(() => {
@@ -191,6 +207,29 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Referral — own profile only */}
+      {isOwn && referral && (
+        <div className="card p-6 mb-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="text-base font-bold text-gray-900">Invite Friends, Earn Credit</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Get <span className="font-semibold text-emerald-600">$5 credit</span> when someone you invite makes their first purchase. Credit is applied automatically at checkout.</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-extrabold text-emerald-600">${referral.creditBalance.toFixed(2)}</p>
+              <p className="text-xs text-gray-400">credit · {referral.referredCount} invited</p>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <input readOnly value={referral.link} className="input text-sm flex-1 font-mono text-gray-600"
+              onFocus={(e) => e.target.select()} />
+            <button onClick={copyLink} className="btn-primary text-sm px-4 flex-shrink-0">
+              {copied ? '✓ Copied' : 'Copy Link'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Change password — own profile only */}
       {isOwn && (

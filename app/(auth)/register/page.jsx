@@ -1,12 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const params = useSearchParams();
+  const referralCode = params.get('ref') || null;
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'BUYER' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, referralCode }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -44,6 +46,11 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-2xl font-extrabold text-gray-900">Create your account</h1>
           <p className="text-gray-500 mt-1 text-sm">Join thousands of buyers and sellers</p>
+          {referralCode && (
+            <p className="mt-3 inline-block px-4 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">
+              🎁 You were invited by a friend
+            </p>
+          )}
         </div>
         <div className="card p-8">
           {error && <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
@@ -102,4 +109,8 @@ export default function RegisterPage() {
       </div>
     </div>
   );
+}
+
+export default function RegisterPage() {
+  return <Suspense><RegisterForm /></Suspense>;
 }

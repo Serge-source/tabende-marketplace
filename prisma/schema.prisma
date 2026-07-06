@@ -23,6 +23,9 @@ model User {
   resetPasswordExpires DateTime?
   mfaSecret            String?
   mfaEnabled           Boolean   @default(false)
+  referralCode         String?   @unique
+  referredById         String?
+  creditBalance        Float     @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -113,6 +116,7 @@ model Order {
   status          OrderStatus    @default(PENDING)
   shippingStatus  ShippingStatus @default(ORDER_PLACED)
   shippingAddress Json?
+  creditUsed      Float          @default(0)
   stripeSessionId String?
   stripePaymentId String?
   createdAt       DateTime       @default(now())

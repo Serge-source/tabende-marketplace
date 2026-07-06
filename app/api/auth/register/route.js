@@ -19,17 +19,23 @@ export async function POST(request) {
     const { error, data } = validate(registerSchema, body);
     if (error) return NextResponse.json({ error }, { status: 400 });
 
-    const { name, email, password, role } = data;
+    const { name, email, password, role, referralCode } = data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing)
       return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
 
+    let referredById = null;
+    if (referralCode) {
+      const referrer = await prisma.user.findUnique({ where: { referralCode }, select: { id: true } });
+      if (referrer) referredById = referrer.id;
+    }
+
     const hashed = await bcrypt.hash(password, 12);
     const verifyToken = crypto.randomBytes(32).toString('hex');
     const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed, role, emailVerifyToken: verifyToken, emailVerifyExpires: verifyExpires },
+      data: { name, email, password: hashed, role, referredById, emailVerifyToken: verifyToken, emailVerifyExpires: verifyExpires },
     });
 
     sendWelcomeEmail(user).catch(console.error);
