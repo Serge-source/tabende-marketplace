@@ -47,7 +47,10 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!convId) {
-      if (conversations.length > 0) router.replace(`/messages/${conversations[0].id}`);
+      // Desktop auto-selects the first conversation; mobile keeps the list
+      if (conversations.length > 0 && typeof window !== 'undefined' && window.innerWidth >= 640) {
+        router.replace(`/messages/${conversations[0].id}`);
+      }
       return;
     }
     fetch(`/api/messages/conversations/${convId}`).then(async (r) => {
@@ -117,8 +120,8 @@ export default function MessagesPage() {
     <div className="section py-6">
       <h1 className="text-xl font-bold text-gray-900 mb-4">Messages</h1>
       <div className="flex h-[calc(100vh-11rem)] card overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-72 flex-shrink-0 border-r border-gray-100 flex flex-col">
+        {/* Sidebar — on mobile it IS the page until a conversation is opened */}
+        <div className={`${convId ? 'hidden sm:flex' : 'flex'} w-full sm:w-72 flex-shrink-0 sm:border-r border-gray-100 flex-col`}>
           <div className="p-3 border-b border-gray-100">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Conversations</p>
           </div>
@@ -159,9 +162,12 @@ export default function MessagesPage() {
 
         {/* Chat area */}
         {active ? (
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className={`${convId ? 'flex' : 'hidden sm:flex'} flex-1 flex-col min-w-0`}>
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white">
+            <div className="flex items-center gap-3 px-4 sm:px-5 py-4 border-b border-gray-100 bg-white">
+              <Link href="/messages" className="sm:hidden -ml-1 p-1.5 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="Back to conversations">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </Link>
               {otherUser?.avatar ? <img src={otherUser.avatar} alt="" className="w-9 h-9 rounded-full object-cover" /> : (
                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">{otherUser?.name?.[0]}</div>
               )}
@@ -277,7 +283,7 @@ export default function MessagesPage() {
             </form>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="hidden sm:flex flex-1 items-center justify-center bg-gray-50">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <svg className="h-8 w-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>

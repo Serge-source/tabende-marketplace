@@ -44,9 +44,9 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="flex flex-col lg:flex-row items-center justify-between gap-12 px-[8%] py-20 lg:min-h-[80vh]" style={{ background: 'linear-gradient(135deg, #f8fbff, #eef6ff)' }}>
+      <section className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-14 px-[6%] py-16 lg:py-20 lg:min-h-[70vh]" style={{ background: 'linear-gradient(135deg, #f8fbff, #eef6ff)' }}>
         {/* Content */}
-        <div className="flex-1 min-w-0 max-w-[620px]">
+        <div className="flex-1 min-w-0 lg:max-w-[560px]">
           <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold mb-5" style={{ background: '#e2f0ff', color: '#0066cc' }}>
             Buy &amp; Sell Locally
           </span>
@@ -60,7 +60,7 @@ export default function HomePage() {
             <Link href="/browse" className="px-7 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90" style={{ background: '#0066cc' }}>
               Start Browsing
             </Link>
-            <Link href="/sell" className="px-7 py-3.5 rounded-xl font-bold text-base border transition-colors hover:bg-blue-50" style={{ background: 'white', color: '#0066cc', borderColor: '#c9def5' }}>
+            <Link href="/listings/new" className="px-7 py-3.5 rounded-xl font-bold text-base border transition-colors hover:bg-blue-50" style={{ background: 'white', color: '#0066cc', borderColor: '#c9def5' }}>
               Sell an Item
             </Link>
           </div>
@@ -86,7 +86,7 @@ export default function HomePage() {
         </div>
 
         {/* Hero image */}
-        <div className="flex-shrink-0 w-full lg:w-[960px]">
+        <div className="w-full lg:w-[45%] lg:max-w-[600px] flex-shrink-0">
           <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] bg-blue-100 flex items-center justify-center">
             <img
               src="/marketplace-hero.png"
