@@ -185,7 +185,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="flex gap-0.5 border-b border-gray-200 mb-6">
         {[{ key: 'listings', label: 'Moderation' }, { key: 'users', label: 'Users' }, { key: 'reports', label: 'Reports' }].map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => { setTab(t.key); setData([]); setLoading(true); }}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${tab === t.key ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
             {t.label}
           </button>
@@ -196,7 +196,7 @@ export default function AdminPage() {
         <div className="flex justify-center py-16"><svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg></div>
       ) : (
         <div className="space-y-3">
-          {tab === 'listings' && data.map((l) => (
+          {tab === 'listings' && Array.isArray(data) && data.map((l) => (
             <div key={l.id} className="card p-4 flex items-start gap-4">
               <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
                 {l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}
@@ -220,14 +220,14 @@ export default function AdminPage() {
             </div>
           ))}
 
-          {tab === 'users' && data.map((u) => (
+          {tab === 'users' && Array.isArray(data) && data.map((u) => (
             <div key={u.id} className="card p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">{u.name[0]}</div>
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">{u.name?.[0]}</div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{u.name}</p>
                 <p className="text-xs text-gray-500">{u.email}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="badge bg-gray-100 text-gray-600 text-xs capitalize">{u.role.toLowerCase()}</span>
+                  <span className="badge bg-gray-100 text-gray-600 text-xs capitalize">{u.role?.toLowerCase()}</span>
                   {u.isVerified && <span className="badge bg-blue-50 text-blue-700 text-xs">✓ Verified</span>}
                   <span className="text-xs text-gray-400">{u._count?.listings || 0} listings · {u._count?.orders || 0} orders</span>
                 </div>
@@ -247,7 +247,7 @@ export default function AdminPage() {
             </div>
           ))}
 
-          {tab === 'reports' && data.map((r) => (
+          {tab === 'reports' && Array.isArray(data) && data.map((r) => (
             <div key={r.id} className="card p-4 flex items-start gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -275,7 +275,7 @@ export default function AdminPage() {
             </div>
           ))}
 
-          {data.length === 0 && <div className="card p-12 text-center text-gray-400">Nothing to show</div>}
+          {Array.isArray(data) && data.length === 0 && <div className="card p-12 text-center text-gray-400">Nothing to show</div>}
         </div>
       )}
     </div>
