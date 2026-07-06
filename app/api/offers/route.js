@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { createNotification } from '@/lib/notify';
 import { rateLimit } from '@/lib/rateLimit';
+import { isBlockedEitherWay } from '@/lib/blocks';
 
 const OFFER_TTL_MS = 48 * 60 * 60 * 1000; // offers expire after 48h
 const MIN_OFFER_RATIO = 0.1; // lowball floor: 10% of asking price
@@ -25,6 +26,8 @@ export async function POST(request) {
   if (!listing) return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
   if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Listing is not available' }, { status: 400 });
   if (listing.sellerId === user.id) return NextResponse.json({ error: 'Cannot make an offer on your own listing' }, { status: 400 });
+  if (await isBlockedEitherWay(user.id, listing.sellerId))
+    return NextResponse.json({ error: 'You cannot make offers to this user' }, { status: 403 });
   if (price < listing.price * MIN_OFFER_RATIO) {
     return NextResponse.json({ error: `Offer too low — minimum is $${(listing.price * MIN_OFFER_RATIO).toFixed(2)}` }, { status: 400 });
   }

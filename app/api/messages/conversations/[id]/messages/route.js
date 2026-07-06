@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { createNotification } from '@/lib/notify';
 import { scrubContactInfo } from '@/lib/moderation';
 import { rateLimit } from '@/lib/rateLimit';
+import { isBlockedEitherWay } from '@/lib/blocks';
 
 export async function POST(request, { params }) {
   const { user, error } = await requireAuth(request);
@@ -25,6 +26,10 @@ export async function POST(request, { params }) {
   if (!conv) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   if (conv.buyerId !== user.id && conv.sellerId !== user.id)
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const otherId = conv.buyerId === user.id ? conv.sellerId : conv.buyerId;
+  if (await isBlockedEitherWay(user.id, otherId))
+    return NextResponse.json({ error: 'You cannot message this user' }, { status: 403 });
 
   const message = await prisma.message.create({
     data: { conversationId: params.id, senderId: user.id, content: content.trim() },

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { isBlockedEitherWay } from '@/lib/blocks';
 
 export async function GET(request) {
   const { user, error } = await requireAuth(request);
@@ -35,6 +36,9 @@ export async function POST(request) {
   const { listingId, sellerId } = await request.json();
   if (user.id === sellerId)
     return NextResponse.json({ error: 'Cannot message yourself' }, { status: 400 });
+
+  if (await isBlockedEitherWay(user.id, sellerId))
+    return NextResponse.json({ error: 'You cannot contact this user' }, { status: 403 });
 
   let conv = await prisma.conversation.findUnique({
     where: { listingId_buyerId_sellerId: { listingId, buyerId: user.id, sellerId } },

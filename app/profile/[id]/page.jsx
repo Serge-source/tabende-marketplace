@@ -47,6 +47,19 @@ export default function ProfilePage() {
 
   const isOwn = user?.id === id;
 
+  // Block state
+  const [blocked, setBlocked] = useState(false);
+  useEffect(() => {
+    if (!user || isOwn) return;
+    fetch(`/api/users/${id}/block`).then((r) => r.ok ? r.json() : { blocked: false }).then((d) => setBlocked(d.blocked)).catch(() => {});
+  }, [user, id, isOwn]);
+
+  const toggleBlock = async () => {
+    const res = await fetch(`/api/users/${id}/block`, { method: blocked ? 'DELETE' : 'POST' });
+    if (res.ok) { const d = await res.json(); setBlocked(d.blocked); }
+    else { const d = await res.json().catch(() => ({})); alert(d.error || 'Action failed'); }
+  };
+
   useEffect(() => {
     setLoading(true);
     fetch(`/api/users/${id}`).then((r) => r.json()).then((d) => {
@@ -165,6 +178,14 @@ export default function ProfilePage() {
                   <span>Joined {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
                 </div>
                 {isOwn && <button onClick={() => setEditing(true)} className="btn-secondary text-sm mt-3">Edit Profile</button>}
+                {!isOwn && user && (
+                  <button onClick={toggleBlock}
+                    className={`text-sm mt-3 px-4 py-2 rounded-xl border font-medium transition-colors ${blocked
+                      ? 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                      : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}>
+                    {blocked ? 'Unblock User' : 'Block User'}
+                  </button>
+                )}
               </>
             )}
           </div>

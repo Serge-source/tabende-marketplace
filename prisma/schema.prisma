@@ -41,6 +41,8 @@ model User {
   offersAsBuyer       Offer[]        @relation("BuyerOffers")
   offersAsSeller      Offer[]        @relation("SellerOffers")
   savedSearches       SavedSearch[]
+  blockedUsers        BlockedUser[] @relation("Blocker")
+  blockedBy           BlockedUser[] @relation("Blocked")
 
   @@index([email])
   @@index([role])
@@ -267,6 +269,18 @@ enum OfferStatus {
   COUNTERED
   CANCELLED
   EXPIRED
+}
+
+model BlockedUser {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 model SavedSearch {
