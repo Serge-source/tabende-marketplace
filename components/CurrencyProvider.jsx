@@ -17,10 +17,19 @@ const CurrencyContext = createContext({
 
 export function CurrencyProvider({ children }) {
   const [currency, setCurrencyState] = useState('AWG');
+  const [rates, setRates] = useState({ USD: CURRENCIES.USD.rate, EUR: CURRENCIES.EUR.rate });
 
   useEffect(() => {
     const saved = localStorage.getItem('currency');
     if (saved && CURRENCIES[saved]) setCurrencyState(saved);
+    // Validate conversion rates against the live feed (EUR floats; USD is
+    // pegged and the server sanity-checks the feed against the peg)
+    fetch('/api/currency/rates')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.USD && d?.EUR) setRates({ USD: d.USD, EUR: d.EUR });
+      })
+      .catch(() => {});
   }, []);
 
   const setCurrency = (code) => {
@@ -31,13 +40,14 @@ export function CurrencyProvider({ children }) {
 
   const format = useCallback((amount) => {
     const c = CURRENCIES[currency];
-    const converted = amount * c.rate;
+    const rate = currency === 'AWG' ? 1 : rates[currency] ?? c.rate;
+    const converted = amount * rate;
     const digits = converted % 1 === 0 ? 0 : 2;
     return `${c.symbol} ${converted.toLocaleString(undefined, {
       minimumFractionDigits: digits,
       maximumFractionDigits: 2,
     })}`;
-  }, [currency]);
+  }, [currency, rates]);
 
   return (
     <CurrencyContext.Provider value={{ currency, setCurrency, format }}>

@@ -12,7 +12,7 @@ export default function Footer() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <span className="font-extrabold text-gray-900">Tabende</span>
+              <span className="font-extrabold text-gray-900">Ta Bende Bon</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">The trusted marketplace for buying and selling goods locally and online.</p>
           </div>
@@ -42,8 +42,8 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Tabende Marketplace. All rights reserved.</p>
-          <p className="text-xs text-gray-400">Payments secured by Stripe</p>
+          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Ta Bende Bon. All rights reserved.</p>
+          <p className="text-xs text-gray-400">Payments secured by Pay.aw</p>
         </div>
       </div>
     </footer>

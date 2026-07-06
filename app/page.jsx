@@ -174,7 +174,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">Ready to start selling?</h2>
-          <p className="text-blue-100 text-lg mb-8">Join thousands of sellers already earning on Tabende. List your first item in minutes.</p>
+          <p className="text-blue-100 text-lg mb-8">Join thousands of sellers already earning on Ta Bende Bon. List your first item in minutes.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/register" className="bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors shadow-lg text-base">
               Get Started Free

@@ -25,7 +25,7 @@ export async function POST(request) {
         to: process.env.SUPPORT_EMAIL || 'support@tabende.com',
         from: process.env.FROM_EMAIL || 'noreply@tabende.com',
         replyTo: email,
-        subject: `[Tabende Support] ${subject}`,
+        subject: `[Ta Bende Bon Support] ${subject}`,
         text: `From: ${name} <${email}>\nSubject: ${subject}\n\n${message}`,
       });
     }

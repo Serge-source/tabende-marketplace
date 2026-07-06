@@ -9,7 +9,7 @@ export async function generateMetadata({ params }) {
     });
     if (!listing) return { title: 'Listing Not Found' };
 
-    const description = listing.description?.slice(0, 155) || `${listing.category} listing on Tabende`;
+    const description = listing.description?.slice(0, 155) || `${listing.category} listing on Ta Bende Bon`;
 
     // og:image comes from the opengraph-image.jsx file convention,
     // which renders a branded card with the listing photo

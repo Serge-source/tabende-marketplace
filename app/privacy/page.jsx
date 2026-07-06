@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-export const metadata = { title: 'Privacy Policy — Tabende' };
+export const metadata = { title: 'Privacy Policy — Ta Bende Bon' };
 
 const EFFECTIVE_DATE = 'June 26, 2026';
 
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-2">1. What We Collect</h2>
           <p><strong>Account data:</strong> name, email address, password (stored hashed), optional profile photo and bio.</p>
-          <p><strong>Transaction data:</strong> listings you create, orders you place or receive, reviews, and messages sent through the Platform. Payment card details are processed by Stripe and never stored on our servers.</p>
+          <p><strong>Transaction data:</strong> listings you create, orders you place or receive, reviews, and messages sent through the Platform. Payment card details are processed by Pay.aw and never stored on our servers.</p>
           <p><strong>Technical data:</strong> IP address, browser type, and usage events collected via Google Analytics to understand how the Platform is used.</p>
         </section>
 
@@ -25,7 +25,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-2">3. Sharing</h2>
-          <p>We share data only with: <strong>other users</strong> as needed to complete transactions (your name and profile are visible to people you transact or message with), <strong>service providers</strong> that operate the Platform on our behalf (Stripe for payments, SendGrid for email, Railway for hosting, Google Analytics for usage measurement), and <strong>authorities</strong> when legally required.</p>
+          <p>We share data only with: <strong>other users</strong> as needed to complete transactions (your name and profile are visible to people you transact or message with), <strong>service providers</strong> that operate the Platform on our behalf (Pay.aw for payments, SendGrid for email, Railway for hosting, Google Analytics for usage measurement), and <strong>authorities</strong> when legally required.</p>
         </section>
 
         <section>
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-2">7. Security</h2>
-          <p>Passwords are hashed with bcrypt, connections are encrypted with TLS, payment processing is delegated to Stripe (PCI DSS Level 1), and optional two-factor authentication is available on all accounts. No system is perfectly secure; notify us immediately if you suspect unauthorized access to your account.</p>
+          <p>Passwords are hashed with bcrypt, connections are encrypted with TLS, payment processing is delegated to Pay.aw, and optional two-factor authentication is available on all accounts. No system is perfectly secure; notify us immediately if you suspect unauthorized access to your account.</p>
         </section>
 
         <section>

@@ -9,11 +9,11 @@ const FAQS = [
   },
   {
     q: 'What payment methods are accepted?',
-    a: 'Tabende uses Stripe for secure payments, supporting all major credit and debit cards (Visa, Mastercard, American Express, Discover).',
+    a: 'Ta Bende Bon uses Stripe for secure payments, supporting all major credit and debit cards (Visa, Mastercard, American Express, Discover).',
   },
   {
     q: 'How does the 5% fee work?',
-    a: 'Tabende charges a 5% marketplace fee on each completed sale. This fee is deducted from the sale price and the remaining 95% is paid out to the seller.',
+    a: 'Ta Bende Bon charges a 5% marketplace fee on each completed sale. This fee is deducted from the sale price and the remaining 95% is paid out to the seller.',
   },
   {
     q: 'How do I contact a seller?',
@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: 'Is my payment information secure?',
-    a: 'Yes. Tabende never stores your card details. All payments are processed securely through Stripe, which is PCI DSS Level 1 certified.',
+    a: 'Yes. Ta Bende Bon never stores your card details. All payments are processed securely through Stripe, which is PCI DSS Level 1 certified.',
   },
   {
     q: 'How do I report a suspicious listing or user?',

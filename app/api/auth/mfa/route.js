@@ -10,8 +10,8 @@ export async function GET(request) {
   if (error) return error;
 
   const secret = speakeasy.generateSecret({
-    name: `Tabende (${user.email})`,
-    issuer: 'Tabende',
+    name: `Ta Bende Bon (${user.email})`,
+    issuer: 'Ta Bende Bon',
     length: 20,
   });
 

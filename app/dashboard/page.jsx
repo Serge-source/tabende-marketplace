@@ -354,7 +354,7 @@ export default function DashboardPage() {
                 placeholder="Describe what happened (minimum 20 characters). Include dates and any details that help us review."
                 value={disputeForm.description}
                 onChange={(e) => setDisputeForm((f) => ({ ...f, description: e.target.value }))} />
-              <p className="text-xs text-gray-400">Tip: message the seller first — most issues are resolved directly. Disputes are reviewed by the Tabende team.</p>
+              <p className="text-xs text-gray-400">Tip: message the seller first — most issues are resolved directly. Disputes are reviewed by the Ta Bende Bon team.</p>
             </div>
             <div className="flex gap-2">
               <button onClick={submitDispute} disabled={disputeForm.description.trim().length < 20}

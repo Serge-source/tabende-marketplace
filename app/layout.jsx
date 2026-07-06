@@ -8,18 +8,18 @@ import ServiceWorker from '@/components/ServiceWorker';
 import { CurrencyProvider } from '@/components/CurrencyProvider';
 
 export const metadata = {
-  title: { default: 'Tabende Marketplace', template: '%s | Tabende' },
+  title: { default: 'Ta Bende Bon', template: '%s | Ta Bende Bon' },
   description: 'Buy and sell with confidence — the trusted C2C marketplace for electronics, clothing, vehicles, and more.',
   keywords: ['marketplace', 'buy', 'sell', 'second hand', 'used items', 'classifieds'],
   openGraph: {
-    title: 'Tabende Marketplace',
+    title: 'Ta Bende Bon',
     description: 'Buy and sell with confidence',
     type: 'website',
-    siteName: 'Tabende',
+    siteName: 'Ta Bende Bon',
   },
   twitter: { card: 'summary_large_image' },
   manifest: '/manifest.json',
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Tabende' },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Ta Bende Bon' },
   icons: {
     icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
     apple: '/apple-touch-icon.png',

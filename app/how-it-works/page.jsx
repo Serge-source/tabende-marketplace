@@ -1,11 +1,11 @@
 import Link from 'next/link';
 
-export const metadata = { title: 'How it Works — Tabende' };
+export const metadata = { title: 'How it Works — Ta Bende Bon' };
 
 const BUYER_STEPS = [
   { icon: '🔍', title: 'Browse & search', text: 'Explore listings by category, location, and price — or save a search and get notified when new matches appear.' },
   { icon: '💬', title: 'Message or make an offer', text: 'Chat with sellers in real time, ask questions, and negotiate the price with offers and counter-offers.' },
-  { icon: '💳', title: 'Pay securely', text: 'Checkout is handled by Stripe — your card details never touch our servers. Store credit from referrals is applied automatically.' },
+  { icon: '💳', title: 'Pay securely', text: 'Checkout is handled by Pay.aw in Aruban florins — your card details never touch our servers. Store credit from referrals is applied automatically.' },
   { icon: '📦', title: 'Track & review', text: 'Follow your order from placed to delivered, then rate the seller. If something goes wrong, open a dispute and our team steps in.' },
 ];
 
@@ -13,7 +13,7 @@ const SELLER_STEPS = [
   { icon: '📸', title: 'List in minutes', text: 'Add photos, a description, and a price. Listings stay active for 60 days and can be relisted with one click.' },
   { icon: '🤝', title: 'Negotiate & accept', text: 'Receive offers from buyers, counter with your own price, and accept when it works for you.' },
   { icon: '🚚', title: 'Ship & update', text: 'Once paid, you get the buyer’s shipping address. Update the order status as you pack, ship, and deliver.' },
-  { icon: '💰', title: 'Get paid', text: 'Tabende charges a simple 5% commission on completed sales. Boost your listing for $5 to feature it on the homepage for 7 days.' },
+  { icon: '💰', title: 'Get paid', text: 'Ta Bende Bon charges a simple 5% commission on completed sales. Boost your listing for Afl. 9 to feature it on the homepage for 7 days.' },
 ];
 
 function Steps({ steps }) {
@@ -37,7 +37,7 @@ export default function HowItWorksPage() {
   return (
     <div className="section py-12 max-w-4xl">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-extrabold text-gray-900">How Tabende Works</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900">How Ta Bende Bon Works</h1>
         <p className="text-gray-500 mt-2 max-w-xl mx-auto">A safe, simple marketplace for buying and selling locally. Here&rsquo;s everything you need to know.</p>
       </div>
 
@@ -50,7 +50,7 @@ export default function HowItWorksPage() {
       <div className="card p-6 mt-10">
         <h2 className="text-lg font-bold text-gray-900 mb-3">Staying safe</h2>
         <ul className="space-y-2 text-sm text-gray-600">
-          <li>• <strong>Keep everything on Tabende</strong> — payments and messages on the platform are protected; deals taken off-platform are not.</li>
+          <li>• <strong>Keep everything on Ta Bende Bon</strong> — payments and messages on the platform are protected; deals taken off-platform are not.</li>
           <li>• <strong>Check seller profiles</strong> — ratings, reviews, and verified badges tell you who you&rsquo;re dealing with.</li>
           <li>• <strong>Report problems</strong> — every listing has a report button, every paid order can be disputed, and you can block any user from their profile.</li>
         </ul>

@@ -56,7 +56,7 @@ function LoginForm() {
             </svg>
           </div>
           <h1 className="text-2xl font-extrabold text-gray-900">{mfaRequired ? 'Two-factor authentication' : 'Welcome back'}</h1>
-          <p className="text-gray-500 mt-1 text-sm">{mfaRequired ? 'Enter the 6-digit code from your authenticator app' : 'Sign in to your Tabende account'}</p>
+          <p className="text-gray-500 mt-1 text-sm">{mfaRequired ? 'Enter the 6-digit code from your authenticator app' : 'Sign in to your Ta Bende Bon account'}</p>
         </div>
         <div className="card p-8">
           {error && <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">

@@ -10,8 +10,14 @@ export async function POST(request) {
   if (error) return error;
 
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return NextResponse.json({ error: 'Payments are not configured yet' }, { status: 503 });
+    // Payment provider: Pay.aw (Aruban florins) is the target processor.
+    // Until its credentials are configured, Stripe remains the fallback seam.
+    if (!process.env.PAYAW_API_KEY && !process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: 'Online payments via Pay.aw are being set up — check back soon' }, { status: 503 });
+    }
+    if (process.env.PAYAW_API_KEY) {
+      // TODO: Pay.aw adapter — requires merchant credentials and API docs
+      return NextResponse.json({ error: 'Pay.aw integration pending activation' }, { status: 503 });
     }
 
     const { listingId } = await request.json();

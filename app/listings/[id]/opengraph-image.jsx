@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
-export const alt = 'Tabende listing';
+export const alt = 'Ta Bende Bon listing';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -72,7 +72,7 @@ export default async function OgImage({ params }) {
               </svg>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', fontSize: 30, fontWeight: 800, color: '#2D2D2D' }}>Tabende</div>
+              <div style={{ display: 'flex', fontSize: 30, fontWeight: 800, color: '#2D2D2D' }}>Ta Bende Bon</div>
               {listing?.seller?.name && (
                 <div style={{ display: 'flex', fontSize: 22, color: '#6b7280' }}>Sold by {listing.seller.name}</div>
               )}
