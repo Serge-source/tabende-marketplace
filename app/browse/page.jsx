@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ListingCard from '@/components/ListingCard';
+import { useAuth } from '@/components/AuthProvider';
 
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
@@ -27,6 +28,44 @@ function BrowseContent() {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
+  const { user } = useAuth();
+  const [savedSearches, setSavedSearches] = useState([]);
+  const [saveMsg, setSaveMsg] = useState('');
+
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/saved-searches').then((r) => r.ok ? r.json() : []).then(setSavedSearches).catch(() => {});
+  }, [user]);
+
+  const saveSearch = async () => {
+    setSaveMsg('');
+    const res = await fetch('/api/saved-searches', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: search, category, location, minPrice, maxPrice }),
+    });
+    const d = await res.json();
+    if (!res.ok) { setSaveMsg(d.error); setTimeout(() => setSaveMsg(''), 4000); return; }
+    setSavedSearches((prev) => [d, ...prev]);
+    setSaveMsg('Saved! We\u2019ll notify you about new matches.');
+    setTimeout(() => setSaveMsg(''), 4000);
+  };
+
+  const deleteSearch = async (id) => {
+    await fetch(`/api/saved-searches/${id}`, { method: 'DELETE' });
+    setSavedSearches((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const searchLabel = (s) => [s.query, s.category, s.location].filter(Boolean).join(' \u00b7 ') || 'All listings';
+  const searchHref = (s) => {
+    const p = new URLSearchParams();
+    if (s.query) p.set('search', s.query);
+    if (s.category) p.set('category', s.category);
+    if (s.location) p.set('location', s.location);
+    if (s.minPrice != null) p.set('minPrice', s.minPrice);
+    if (s.maxPrice != null) p.set('maxPrice', s.maxPrice);
+    return `/browse?${p.toString()}`;
+  };
 
   const sp = (key) => searchParams.get(key) || '';
   const category = sp('category');
@@ -82,6 +121,12 @@ function BrowseContent() {
           <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} listings</p>
         </div>
         <div className="flex items-center gap-2">
+          {user && (search || category || location) && (
+            <button onClick={saveSearch}
+              className="btn text-sm bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
+              🔔 Save search
+            </button>
+          )}
           <button onClick={() => setFilterOpen((o) => !o)} className="sm:hidden btn-secondary gap-2">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
             Filters {hasFilters && <span className="w-2 h-2 rounded-full bg-blue-500" />}
@@ -94,6 +139,8 @@ function BrowseContent() {
           </select>
         </div>
       </div>
+
+      {saveMsg && <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">{saveMsg}</div>}
 
       <div className="flex gap-6">
         {/* Sidebar */}
@@ -138,6 +185,25 @@ function BrowseContent() {
               <input type="text" placeholder="City, region..." className="input text-sm" value={location}
                 onChange={(e) => setParam('location', e.target.value)} />
             </div>
+
+            {user && savedSearches.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">🔔 Saved Searches</label>
+                <div className="space-y-1">
+                  {savedSearches.map((s) => (
+                    <div key={s.id} className="flex items-center gap-1.5 group">
+                      <a href={searchHref(s)} className="flex-1 text-sm text-gray-600 hover:text-blue-600 truncate px-2 py-1.5 rounded-lg hover:bg-gray-50">
+                        {searchLabel(s)}
+                      </a>
+                      <button onClick={() => deleteSearch(s.id)} aria-label="Delete saved search"
+                        className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all flex-shrink-0 p-1">
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 

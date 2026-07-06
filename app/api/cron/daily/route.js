@@ -67,5 +67,43 @@ export async function POST(request) {
   }
   results.expiryWarningsSent = warned;
 
+  // 5. Saved-search alerts: notify users about new matching listings
+  const savedSearches = await prisma.savedSearch.findMany();
+  let searchAlerts = 0;
+  for (const s of savedSearches) {
+    const where = {
+      status: 'ACTIVE',
+      createdAt: { gt: s.lastNotifiedAt },
+      ...(s.query && {
+        OR: [
+          { title: { contains: s.query, mode: 'insensitive' } },
+          { description: { contains: s.query, mode: 'insensitive' } },
+        ],
+      }),
+      ...(s.category && { category: s.category }),
+      ...(s.location && { location: { contains: s.location, mode: 'insensitive' } }),
+      ...(s.minPrice != null && { price: { gte: s.minPrice } }),
+      ...(s.maxPrice != null && { price: { ...(s.minPrice != null ? { gte: s.minPrice } : {}), lte: s.maxPrice } }),
+    };
+    const matches = await prisma.listing.count({ where });
+    if (matches === 0) continue;
+
+    const params = new URLSearchParams();
+    if (s.query) params.set('search', s.query);
+    if (s.category) params.set('category', s.category);
+    if (s.location) params.set('location', s.location);
+    const label = [s.query, s.category, s.location].filter(Boolean).join(' · ');
+
+    await createNotification(s.userId, {
+      type: 'SAVED_SEARCH',
+      title: `${matches} new listing${matches === 1 ? '' : 's'} for "${label}"`,
+      body: 'New items matching your saved search were posted. Take a look before they sell.',
+      href: `/browse?${params.toString()}`,
+    });
+    await prisma.savedSearch.update({ where: { id: s.id }, data: { lastNotifiedAt: now } });
+    searchAlerts += 1;
+  }
+  results.savedSearchAlerts = searchAlerts;
+
   return NextResponse.json({ ok: true, ranAt: now.toISOString(), ...results });
 }

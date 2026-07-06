@@ -40,6 +40,7 @@ model User {
   notifications       Notification[]
   offersAsBuyer       Offer[]        @relation("BuyerOffers")
   offersAsSeller      Offer[]        @relation("SellerOffers")
+  savedSearches       SavedSearch[]
 
   @@index([email])
   @@index([role])
@@ -268,6 +269,21 @@ enum OfferStatus {
   EXPIRED
 }
 
+model SavedSearch {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query          String?
+  category       String?
+  location       String?
+  minPrice       Float?
+  maxPrice       Float?
+  lastNotifiedAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+}
+
 model Notification {
   id        String           @id @default(cuid())
   userId    String
@@ -290,4 +306,5 @@ enum NotificationType {
   LISTING_FEATURED
   LISTING_EXPIRING
   REPORT_UPDATE
+  SAVED_SEARCH
 }
