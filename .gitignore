@@ -44,3 +44,5 @@ coverage/
 
 # Vercel / Railway
 .vercel
+test-results/
+playwright-report/
