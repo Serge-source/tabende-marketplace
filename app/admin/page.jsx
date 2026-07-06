@@ -91,6 +91,11 @@ export default function AdminPage() {
   const [data, setData] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     fetch('/api/admin/stats').then((r) => r.json()).then(setStats);
@@ -99,9 +104,17 @@ export default function AdminPage() {
   useEffect(() => {
     setLoading(true);
     const ep = { users: '/api/admin/users', listings: '/api/admin/listings', reports: '/api/admin/reports' };
-    fetch(ep[tab] || '/api/admin/listings')
-      .then((r) => r.json()).then(setData).finally(() => setLoading(false));
-  }, [tab]);
+    const params = new URLSearchParams({ page: String(page) });
+    if (search) params.set('search', search);
+    fetch(`${ep[tab] || '/api/admin/listings'}?${params.toString()}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setData(Array.isArray(d) ? d : d.items || []);
+        setPages(d.pages || 1);
+        setTotal(d.total || 0);
+      })
+      .finally(() => setLoading(false));
+  }, [tab, page, search]);
 
   const resolveReport = async (id, status) => {
     await fetch(`/api/admin/reports/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
@@ -185,12 +198,28 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="flex gap-0.5 border-b border-gray-200 mb-6">
         {[{ key: 'listings', label: 'Moderation' }, { key: 'users', label: 'Users' }, { key: 'reports', label: 'Reports' }].map((t) => (
-          <button key={t.key} onClick={() => { setTab(t.key); setData([]); setLoading(true); }}
+          <button key={t.key} onClick={() => { setTab(t.key); setData([]); setLoading(true); setPage(1); setSearch(''); setSearchInput(''); }}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${tab === t.key ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
             {t.label}
           </button>
         ))}
       </div>
+
+      {tab !== 'reports' && (
+        <form onSubmit={(e) => { e.preventDefault(); setPage(1); setSearch(searchInput.trim()); }} className="flex gap-2 mb-5 max-w-md">
+          <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={tab === 'users' ? 'Search by name or email...' : 'Search by title, seller name or email...'}
+            className="input text-sm flex-1" />
+          <button type="submit" className="btn-secondary text-sm px-4">Search</button>
+          {search && (
+            <button type="button" onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }}
+              className="btn-ghost text-sm px-3">Clear</button>
+          )}
+        </form>
+      )}
+      {!loading && total > 0 && (
+        <p className="text-xs text-gray-400 mb-3">{total.toLocaleString()} result{total === 1 ? '' : 's'}{search ? ` for “${search}”` : ''}</p>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-16"><svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg></div>
@@ -276,6 +305,16 @@ export default function AdminPage() {
           ))}
 
           {Array.isArray(data) && data.length === 0 && <div className="card p-12 text-center text-gray-400">Nothing to show</div>}
+
+          {pages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
+                className="btn-secondary text-sm px-4">← Prev</button>
+              <span className="text-sm text-gray-500">Page {page} of {pages}</span>
+              <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages}
+                className="btn-secondary text-sm px-4">Next →</button>
+            </div>
+          )}
         </div>
       )}
     </div>
