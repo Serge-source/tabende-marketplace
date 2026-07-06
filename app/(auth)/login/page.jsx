@@ -34,7 +34,9 @@ function LoginForm() {
       }
       if (!res.ok) throw new Error(data.error);
       login(data.user);
-      router.push(from);
+      // Admins land on the admin panel unless they were headed somewhere specific
+      const dest = data.user.role === 'ADMIN' && from === '/dashboard' ? '/admin' : from;
+      router.push(dest);
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
