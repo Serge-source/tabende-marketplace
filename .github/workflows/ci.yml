@@ -64,4 +64,5 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
           JWT_SECRET: ci-e2e-secret
+          ALLOW_INSECURE_COOKIES: '1'
           PORT: 3000
