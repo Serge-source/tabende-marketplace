@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Script from 'next/script';
+import ServiceWorker from '@/components/ServiceWorker';
 
 export const metadata = {
   title: { default: 'Tabende Marketplace', template: '%s | Tabende' },
@@ -16,6 +17,16 @@ export const metadata = {
     siteName: 'Tabende',
   },
   twitter: { card: 'summary_large_image' },
+  manifest: '/manifest.json',
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Tabende' },
+  icons: {
+    icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: '/apple-touch-icon.png',
+  },
+};
+
+export const viewport = {
+  themeColor: '#2563eb',
 };
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -40,6 +51,7 @@ export default function RootLayout({ children }) {
         )}
       </head>
       <body>
+        <ServiceWorker />
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:font-medium focus:shadow-lg">
           Skip to main content
         </a>
