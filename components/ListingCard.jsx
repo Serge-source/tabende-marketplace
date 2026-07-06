@@ -1,4 +1,5 @@
 'use client';
+import { useCurrency } from '@/components/CurrencyProvider';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from './AuthProvider';
@@ -12,6 +13,7 @@ const COND_COLORS = {
 };
 
 export default function ListingCard({ listing }) {
+  const { format } = useCurrency();
   const { user } = useAuth();
   const [fav, setFav] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -65,7 +67,7 @@ export default function ListingCard({ listing }) {
       <div className="p-3.5 flex flex-col gap-2 flex-1">
         <div className="flex justify-between items-start gap-2">
           <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug flex-1">{listing.title}</p>
-          <p className="text-base font-extrabold text-blue-600 whitespace-nowrap">${listing.price.toLocaleString()}</p>
+          <p className="text-base font-extrabold text-blue-600 whitespace-nowrap">{format(listing.price)}</p>
         </div>
 
         <div className="flex flex-wrap gap-1.5">

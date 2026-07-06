@@ -21,8 +21,9 @@
     color: var(--ink);
     font-family: 'Inter', system-ui, sans-serif;
   }
-  h1, h2, h3, h4 {
-    font-family: 'Syne', 'Inter', system-ui, sans-serif;
+  h1, h2, h3, h4,
+  .hero-title, .section-title, .newsletter-title {
+    font-family: 'Urbanist', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.01em;
   }
   * { @apply box-border; }

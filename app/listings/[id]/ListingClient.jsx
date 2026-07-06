@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { useCurrency } from '@/components/CurrencyProvider';
 
 export default function ListingDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { format } = useCurrency();
   const router = useRouter();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -164,7 +166,7 @@ export default function ListingDetailPage() {
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{listing.title}</h1>
             </div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 mt-3">${listing.price.toLocaleString()}</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 mt-3">{format(listing.price)}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -182,18 +184,18 @@ export default function ListingDetailPage() {
             <>
               {myOffer?.status === 'ACCEPTED' && (
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium">
-                  🎉 Your offer of ${myOffer.amount.toLocaleString()} was accepted — Buy Now will checkout at that price.
+                  🎉 Your offer of {format(myOffer.amount)} was accepted — Buy Now will checkout at that price.
                 </div>
               )}
               {myOffer?.status === 'PENDING' && (
                 <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
-                  Your offer of ${myOffer.amount.toLocaleString()} is waiting for the seller&apos;s response.
+                  Your offer of {format(myOffer.amount)} is waiting for the seller&apos;s response.
                 </div>
               )}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleBuy} disabled={buyLoading} className="btn-primary py-4 flex-1 text-base font-bold rounded-2xl">
                   {buyLoading ? 'Redirecting to checkout...'
-                    : myOffer?.status === 'ACCEPTED' ? `🛒 Buy for $${myOffer.amount.toLocaleString()}` : '🛒 Buy Now'}
+                    : myOffer?.status === 'ACCEPTED' ? `🛒 Buy for ${format(myOffer.amount)}` : '🛒 Buy Now'}
                 </button>
                 {!myOffer && (
                   <button
@@ -257,7 +259,7 @@ export default function ListingDetailPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="card p-6 w-full max-w-sm">
             <h3 className="font-bold text-gray-900 mb-1">Make an offer</h3>
-            <p className="text-sm text-gray-500 mb-4">Asking price: <span className="font-semibold text-gray-700">${listing.price.toLocaleString()}</span> · offers expire after 48 hours</p>
+            <p className="text-sm text-gray-500 mb-4">Asking price: <span className="font-semibold text-gray-700">{format(listing.price)}</span> · offers expire after 48 hours</p>
             {offerError && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{offerError}</div>}
             <div className="relative mb-4">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
@@ -270,7 +272,7 @@ export default function ListingDetailPage() {
               {[0.9, 0.8, 0.7].map((f) => (
                 <button key={f} onClick={() => setOfferAmount(String(Math.round(listing.price * f)))}
                   className="flex-1 text-xs py-2 rounded-lg bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 font-medium">
-                  ${Math.round(listing.price * f).toLocaleString()} ({Math.round(f * 100)}%)
+                  {format(Math.round(listing.price * f))} ({Math.round(f * 100)}%)
                 </button>
               ))}
             </div>

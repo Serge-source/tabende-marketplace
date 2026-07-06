@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Script from 'next/script';
 import ServiceWorker from '@/components/ServiceWorker';
+import { CurrencyProvider } from '@/components/CurrencyProvider';
 
 export const metadata = {
   title: { default: 'Tabende Marketplace', template: '%s | Tabende' },
@@ -37,7 +38,7 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet" />
         {GA_ID && (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
@@ -56,6 +57,7 @@ export default function RootLayout({ children }) {
           Skip to main content
         </a>
         <ThemeProvider>
+          <CurrencyProvider>
           <AuthProvider>
             <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
               <Navbar />
@@ -63,6 +65,7 @@ export default function RootLayout({ children }) {
               <Footer />
             </div>
           </AuthProvider>
+          </CurrencyProvider>
         </ThemeProvider>
       </body>
     </html>

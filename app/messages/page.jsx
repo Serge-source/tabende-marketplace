@@ -3,12 +3,14 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { useCurrency } from '@/components/CurrencyProvider';
 import { io } from 'socket.io-client';
 
 export default function MessagesPage() {
   const params = useParams();
   const convId = params?.id;
   const { user } = useAuth();
+  const { format } = useCurrency();
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
@@ -175,7 +177,7 @@ export default function MessagesPage() {
                 <Link href={`/profile/${otherUser?.id}`} className="font-semibold text-gray-900 text-sm hover:text-blue-600">{otherUser?.name}</Link>
                 <p className="text-xs text-gray-400">
                   Re: <Link href={`/listings/${active.listing?.id}`} className="hover:text-blue-600 hover:underline text-blue-500 font-medium">{active.listing?.title}</Link>
-                  {active.listing?.price && <span className="text-gray-400"> · ${active.listing.price.toLocaleString()}</span>}
+                  {active.listing?.price && <span className="text-gray-400"> · {format(active.listing.price)}</span>}
                 </p>
               </div>
             </div>
@@ -187,13 +189,13 @@ export default function MessagesPage() {
                   <div className="text-sm">
                     {activeOffer.status === 'ACCEPTED' ? (
                       <span className="text-emerald-700 font-medium">
-                        ✅ Offer accepted: <strong>${activeOffer.amount.toLocaleString()}</strong>
+                        ✅ Offer accepted: <strong>{format(activeOffer.amount)}</strong>
                         {user?.id === activeOffer.buyerId && <> — <Link href={`/listings/${active.listing?.id}`} className="underline font-semibold">complete checkout</Link></>}
                       </span>
                     ) : (
                       <span className="text-amber-800">
                         💰 {activeOffer.createdById === user?.id ? 'Your offer' : `Offer ${activeOffer.createdById === activeOffer.sellerId ? '(counter) ' : ''}from ${otherUser?.name}`}:{' '}
-                        <strong>${activeOffer.amount.toLocaleString()}</strong>
+                        <strong>{format(activeOffer.amount)}</strong>
                         <span className="text-amber-600 text-xs ml-2">expires {new Date(activeOffer.expiresAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </span>
                     )}

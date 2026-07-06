@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import { useTheme } from './ThemeProvider';
+import { useCurrency, CURRENCIES } from './CurrencyProvider';
 import { io } from 'socket.io-client';
 
 const NAV_LINKS = [
@@ -13,6 +14,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { currency, setCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
   const [search, setSearch] = useState('');
@@ -113,6 +115,10 @@ export default function Navbar() {
 
           {/* Desktop right */}
           <div className="hidden sm:flex items-center gap-2 ml-auto">
+            <select value={currency} onChange={(e) => setCurrency(e.target.value)} aria-label="Currency"
+              className="text-xs font-medium text-gray-600 bg-transparent border border-gray-200 rounded-xl px-2 py-1.5 cursor-pointer focus:outline-none dark:text-gray-300 dark:border-gray-700">
+              {Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.label}</option>)}
+            </select>
             <button onClick={toggleTheme} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle dark mode">
               {theme === 'dark'
                 ? <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
@@ -244,6 +250,12 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="sm:hidden border-t border-gray-100 py-2 space-y-0.5">
             <Link href="/browse" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Browse</Link>
+            <div className="px-3 py-2">
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} aria-label="Currency"
+                className="w-full text-sm text-gray-700 bg-transparent border border-gray-200 rounded-xl px-3 py-2">
+                {Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.label}</option>)}
+              </select>
+            </div>
             {user ? (
               <>
                 {(user.role === 'SELLER' || user.role === 'ADMIN') && <Link href="/listings/new" className="block px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-xl">+ New Listing</Link>}

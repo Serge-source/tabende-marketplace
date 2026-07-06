@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { useCurrency } from '@/components/CurrencyProvider';
 
 const SHIP_STEPS = ['ORDER_PLACED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 const SHIP_LABELS = { ORDER_PLACED: 'Order Placed', SHIPPED: 'Shipped', OUT_FOR_DELIVERY: 'Out for Delivery', DELIVERED: 'Delivered' };
@@ -25,6 +26,7 @@ function ShippingTracker({ status }) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { format } = useCurrency();
   const [tab, setTab] = useState('orders');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +141,7 @@ export default function DashboardPage() {
               <div className="flex-1 min-w-0">
                 <Link href={`/listings/${l.id}`} className="font-semibold text-gray-900 hover:text-blue-600 truncate block">{l.title}</Link>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="font-bold text-blue-600">${l.price.toLocaleString()}</span>
+                  <span className="font-bold text-blue-600">{format(l.price)}</span>
                   <span className={`badge text-xs ${l.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : l.status === 'SOLD' ? 'bg-gray-100 text-gray-500' : 'bg-red-50 text-red-600'}`}>{l.status}</span>
                   {l.isBoosted && <span className="badge text-xs bg-amber-50 text-amber-700">★ Boosted</span>}
                   <span className="text-xs text-gray-400 flex items-center gap-1"><svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>{l._count?.favorites || 0}</span>
@@ -182,7 +184,7 @@ export default function DashboardPage() {
                   <Link href={`/listings/${o.listing?.id}`} className="font-semibold text-gray-900 hover:text-blue-600 block truncate">{o.listing?.title}</Link>
                   <p className="text-xs text-gray-500 mt-0.5">Seller: <span className="font-medium">{o.seller?.name}</span></p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="font-bold text-blue-600">${o.amount.toLocaleString()}</span>
+                    <span className="font-bold text-blue-600">{format(o.amount)}</span>
                     <span className={`badge text-xs ${o.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{o.status}</span>
                   </div>
                 </div>
@@ -227,7 +229,7 @@ export default function DashboardPage() {
                   <p className="font-semibold text-gray-900 truncate">{o.listing?.title}</p>
                   <p className="text-xs text-gray-500 mt-0.5">Buyer: <span className="font-medium">{o.buyer?.name}</span></p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="font-bold text-emerald-600">+${o.amount.toLocaleString()}</span>
+                    <span className="font-bold text-emerald-600">+{format(o.amount)}</span>
                     <span className={`badge text-xs ${o.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{o.status}</span>
                   </div>
                 </div>
@@ -242,7 +244,7 @@ export default function DashboardPage() {
                     {o.review && <span className="text-amber-400 text-sm">{'★'.repeat(o.review.rating)}</span>}
                     {o.shippingStatus === 'ORDER_PLACED' && (
                       <button
-                        onClick={() => cancelOrder(o.id, `Cancel this sale and refund the buyer $${o.amount.toLocaleString()}? The listing will be reactivated.`)}
+                        onClick={() => cancelOrder(o.id, `Cancel this sale and refund the buyer ${format(o.amount)}? The listing will be reactivated.`)}
                         disabled={actionBusy === o.id}
                         className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-medium">
                         {actionBusy === o.id ? 'Refunding...' : 'Cancel & Refund'}
@@ -310,7 +312,7 @@ export default function DashboardPage() {
                       <div key={l.id} className="flex items-center gap-3">
                         <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
                         <Link href={`/listings/${l.id}`} className="flex-1 text-sm font-medium text-gray-900 hover:text-blue-600 truncate">{l.title}</Link>
-                        <span className="text-sm font-bold text-blue-600 flex-shrink-0">${l.price.toLocaleString()}</span>
+                        <span className="text-sm font-bold text-blue-600 flex-shrink-0">{format(l.price)}</span>
                         <span className="text-xs text-gray-400 flex-shrink-0">❤️ {l._count.favorites}</span>
                         <span className={`badge text-xs flex-shrink-0 ${l.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{l.status}</span>
                       </div>
@@ -326,7 +328,7 @@ export default function DashboardPage() {
               {Array.isArray(data) && data.map((l) => (
                 <Link key={l.id} href={`/listings/${l.id}`} className="card overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all">
                   <div className="aspect-[4/3] bg-gray-100">{l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}</div>
-                  <div className="p-3"><p className="text-sm font-semibold text-gray-900 truncate">{l.title}</p><p className="text-sm font-bold text-blue-600 mt-1">${l.price.toLocaleString()}</p></div>
+                  <div className="p-3"><p className="text-sm font-semibold text-gray-900 truncate">{l.title}</p><p className="text-sm font-bold text-blue-600 mt-1">{format(l.price)}</p></div>
                 </Link>
               ))}
             </div>
@@ -339,7 +341,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="card p-6 w-full max-w-sm">
             <h3 className="font-bold text-gray-900 mb-1">Report a problem</h3>
-            <p className="text-sm text-gray-500 mb-4">Order: <span className="font-medium">{disputeOrder.listing?.title}</span> · ${disputeOrder.amount.toLocaleString()}</p>
+            <p className="text-sm text-gray-500 mb-4">Order: <span className="font-medium">{disputeOrder.listing?.title}</span> · {format(disputeOrder.amount)}</p>
             {disputeMsg && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{disputeMsg}</div>}
             <div className="space-y-3 mb-4">
               <select className="input text-sm" value={disputeForm.reason}
