@@ -4,37 +4,73 @@
 
 @layer base {
   :root {
-    --brand: 37 99 235;
+    --accent: #7F9B6D;        /* warm sage */
+    --accent-dark: #6d875d;
+    --accent-tint: #E8F0E4;
+    --ink: #2D2D2D;
+    --ink-mid: #6B6B6B;
+    --bg-warm: #F5F3F0;       /* warm beige */
+    --bg-soft: #FAFAF8;       /* off-white */
+    --line: #D9D3CC;
+    --line-soft: #EFEFEF;
   }
   html { scroll-behavior: smooth; }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+    @apply antialiased dark:bg-gray-950 dark:text-gray-100;
+    background: var(--bg-warm);
+    color: var(--ink);
     font-family: 'Inter', system-ui, sans-serif;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Syne', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
   * { @apply box-border; }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 font-medium rounded-xl px-4 py-2.5 text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-1;
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-3xl px-6 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none;
+    transition: all 0.16s ease;
   }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .btn:active:not(:disabled) { transform: scale(0.98); }
   .btn-primary {
-    @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm;
+    @apply btn text-white;
+    background: var(--accent);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-dark);
+    box-shadow: 0 4px 16px rgba(127, 155, 109, 0.35);
   }
   .btn-secondary {
-    @apply btn bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 focus:ring-gray-300 shadow-sm dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700;
+    @apply btn bg-transparent dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700;
+    color: var(--ink);
+    border: 2px solid var(--line);
   }
+  .btn-secondary:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    @apply btn text-white;
+    background: #E85D5D;
   }
+  .btn-danger:hover:not(:disabled) { background: #d94f4f; }
   .btn-ghost {
     @apply btn text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800;
   }
   .input {
-    @apply w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500;
+    @apply w-full rounded-3xl px-4 py-3 text-sm bg-white placeholder:text-gray-400 focus:outline-none transition dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500;
+    border: 2px solid var(--line);
   }
+  .input:focus {
+    border-color: var(--accent);
+    background: #F8F7F6;
+  }
+  .dark .input:focus { background: rgb(17 24 39); }
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-gray-100 dark:bg-gray-900 dark:border-gray-800;
+    @apply bg-white rounded-2xl border dark:bg-gray-900 dark:border-gray-800;
+    border-color: var(--line-soft);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+    transition: box-shadow 0.16s ease;
   }
   .badge {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
@@ -50,12 +86,59 @@
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-/* Accessible focus indicators */
+/* Accessible focus indicators — 3px soft accent ring */
 :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 3px solid rgba(127, 155, 109, 0.6);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
+
+/* ---------------------------------------------------------------------------
+   Warm Earth palette remap: the codebase uses the blue/gray Tailwind
+   palette consistently, so remapping those utilities re-brands every
+   component to the Neo-Tactile sage system without touching each file.
+--------------------------------------------------------------------------- */
+.bg-blue-600, .bg-blue-500 { background-color: var(--accent); }
+.hover\:bg-blue-700:hover, .hover\:bg-blue-600:hover { background-color: var(--accent-dark); }
+.text-blue-600, .text-blue-700, .text-blue-500 { color: var(--accent); }
+.hover\:text-blue-600:hover { color: var(--accent); }
+.bg-blue-50 { background-color: var(--accent-tint); }
+.bg-blue-100 { background-color: #DCE8D5; }
+.hover\:bg-blue-50:hover { background-color: var(--accent-tint); }
+.border-blue-200 { border-color: #C9D8BE; }
+.border-blue-500, .border-l-blue-500 { border-color: var(--accent); }
+.border-l-blue-500 { border-left-color: var(--accent); }
+.focus\:ring-blue-500:focus { --tw-ring-color: rgba(127, 155, 109, 0.5); }
+.text-blue-100 { color: #EAF2E5; }
+.bg-blue-50\/50 { background-color: rgba(232, 240, 228, 0.5); }
+.ring-blue-200 { --tw-ring-color: #C9D8BE; }
+
+/* light-blue gradients → warm sage/beige */
+.from-blue-700, .from-blue-600 { --tw-gradient-from: var(--accent) var(--tw-gradient-from-position); --tw-gradient-to: rgb(127 155 109 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.via-blue-600 { --tw-gradient-stops: var(--tw-gradient-from), var(--accent) var(--tw-gradient-via-position), var(--tw-gradient-to); }
+.to-indigo-600 { --tw-gradient-to: #6d875d var(--tw-gradient-to-position); }
+.from-blue-50 { --tw-gradient-from: var(--bg-warm) var(--tw-gradient-from-position); --tw-gradient-to: rgb(245 243 240 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.to-indigo-50 { --tw-gradient-to: var(--bg-soft) var(--tw-gradient-to-position); }
+
+/* warm the neutral grays (light mode) */
+html:not(.dark) .bg-gray-50 { background-color: var(--bg-warm); }
+html:not(.dark) .bg-gray-100 { background-color: #EDEAE4; }
+html:not(.dark) .text-gray-900 { color: var(--ink); }
+html:not(.dark) .text-gray-600, html:not(.dark) .text-gray-500 { color: var(--ink-mid); }
+html:not(.dark) .border-gray-100 { border-color: var(--line-soft); }
+html:not(.dark) .border-gray-200 { border-color: var(--line); }
+html:not(.dark) .hover\:bg-gray-50:hover { background-color: var(--bg-warm); }
+html:not(.dark) .hover\:bg-gray-100:hover { background-color: #EDEAE4; }
+
+/* card hover lift (Neo-Tactile) */
+.card:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07); }
+.dark .card:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
+
+/* sage tints in dark mode (replace the blue tints) */
+.dark .bg-blue-50 { background-color: rgb(127 155 109 / 0.18); }
+.dark .bg-blue-100 { background-color: rgb(127 155 109 / 0.28); }
+.dark .text-blue-700 { color: #b5cba6; }
+.dark .hover\:bg-blue-50:hover { background-color: rgb(127 155 109 / 0.22); }
 
 /* ---------------------------------------------------------------------------
    Dark theme for raw utility classes used across components.

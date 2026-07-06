@@ -44,23 +44,23 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-14 px-[6%] py-16 lg:py-20 lg:min-h-[70vh]" style={{ background: 'linear-gradient(135deg, #f8fbff, #eef6ff)' }}>
+      <section className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-14 px-[6%] py-16 lg:py-20 lg:min-h-[70vh]" style={{ background: 'linear-gradient(135deg, #FAFAF8, #F5F3F0)' }}>
         {/* Content */}
         <div className="flex-1 min-w-0 lg:max-w-[560px]">
-          <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold mb-5" style={{ background: '#e2f0ff', color: '#0066cc' }}>
+          <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold mb-5" style={{ background: '#E8F0E4', color: '#7F9B6D' }}>
             Buy &amp; Sell Locally
           </span>
-          <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight mb-5" style={{ color: '#102033' }}>
+          <h1 className="text-4xl sm:text-5xl xl:text-[54px] font-extrabold leading-[1.1] mb-5" style={{ color: '#2D2D2D' }}>
             Find Great Deals<br />Near You
           </h1>
-          <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: '#5c6b7a' }}>
+          <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: '#6B6B6B' }}>
             Discover second-hand items, local services, and unique products from people in your community. Sell what you no longer need and connect safely with trusted buyers.
           </p>
           <div className="flex flex-wrap gap-3 mb-8">
-            <Link href="/browse" className="px-7 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90" style={{ background: '#0066cc' }}>
+            <Link href="/browse" className="px-7 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90" style={{ background: '#7F9B6D' }}>
               Start Browsing
             </Link>
-            <Link href="/listings/new" className="px-7 py-3.5 rounded-xl font-bold text-base border transition-colors hover:bg-blue-50" style={{ background: 'white', color: '#0066cc', borderColor: '#c9def5' }}>
+            <Link href="/listings/new" className="px-7 py-3.5 rounded-xl font-bold text-base border transition-colors hover:bg-blue-50" style={{ background: 'transparent', color: '#2D2D2D', border: '2px solid #D9D3CC' }}>
               Sell an Item
             </Link>
           </div>
@@ -69,17 +69,17 @@ export default function HomePage() {
               type="text" value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search phones, furniture, cars..."
               className="flex-1 min-w-0 px-3 py-3 rounded-xl text-gray-900 text-base focus:outline-none border"
-              style={{ borderColor: '#dde6ef' }}
+              style={{ borderColor: '#D9D3CC' }}
             />
             <select
               value={category} onChange={(e) => setCategory(e.target.value)}
               className="hidden sm:block text-gray-600 text-sm px-3 py-3 rounded-xl focus:outline-none border flex-shrink-0"
-              style={{ borderColor: '#dde6ef' }}
+              style={{ borderColor: '#D9D3CC' }}
             >
               <option value="">All Categories</option>
               {CATEGORIES.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
             </select>
-            <button type="submit" className="text-white font-bold px-5 py-3 rounded-xl text-base transition-opacity hover:opacity-90 flex-shrink-0" style={{ background: '#ff8a00' }}>
+            <button type="submit" className="text-white font-bold px-5 py-3 rounded-xl text-base transition-opacity hover:opacity-90 flex-shrink-0" style={{ background: '#7F9B6D' }}>
               Search
             </button>
           </form>
@@ -87,14 +87,14 @@ export default function HomePage() {
 
         {/* Hero image */}
         <div className="w-full lg:w-[45%] lg:max-w-[600px] flex-shrink-0">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] bg-blue-100 flex items-center justify-center">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] flex items-center justify-center" style={{ background: '#C9BAB0' }}>
             <img
               src="/marketplace-hero.png"
               alt="People buying and selling online"
               className="w-full h-full object-cover"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none select-none" style={{ color: '#b3c7e6' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none select-none" style={{ color: '#a89a8f' }}>
               <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               <span className="text-sm font-medium">Add marketplace-hero.png to /public</span>
             </div>

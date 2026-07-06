@@ -82,7 +82,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+    <header className="sticky top-0 z-50 border-b border-gray-100 shadow-sm backdrop-blur" style={{ background: 'rgba(255,255,255,0.95)' }}>
       <div className="section">
         <div className="flex items-center gap-4 h-16">
           {/* Logo */}
