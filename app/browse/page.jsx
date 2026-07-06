@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ListingCard from '@/components/ListingCard';
 import { useAuth } from '@/components/AuthProvider';
+import { useT } from '@/components/I18nProvider';
 
 const CATEGORIES = ['Electronics', 'Home & Garden', 'Vehicles', 'Clothing', 'Sports', 'Toys', 'Services', 'Other'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
@@ -29,6 +30,7 @@ function BrowseContent() {
   const [loading, setLoading] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
+  const t = useT();
   const [savedSearches, setSavedSearches] = useState([]);
   const [saveMsg, setSaveMsg] = useState('');
 
@@ -116,26 +118,26 @@ function BrowseContent() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {search ? `"${search}"` : category || 'All Listings'}
+            {search ? `"${search}"` : category || t('browse.allListings')}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} listings</p>
+          <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} {t('listing.listings')}</p>
         </div>
         <div className="flex items-center gap-2">
           {user && (search || category || location) && (
             <button onClick={saveSearch}
               className="btn text-sm bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
-              🔔 Save search
+              🔔 {t('browse.saveSearch')}
             </button>
           )}
           <button onClick={() => setFilterOpen((o) => !o)} className="sm:hidden btn-secondary gap-2">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-            Filters {hasFilters && <span className="w-2 h-2 rounded-full bg-blue-500" />}
+            {t('browse.filters')} {hasFilters && <span className="w-2 h-2 rounded-full bg-blue-500" />}
           </button>
           <select value={sort} onChange={(e) => setParam('sort', e.target.value)} className="input w-auto text-sm bg-white">
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="price_asc">Price: Low → High</option>
-            <option value="price_desc">Price: High → Low</option>
+            <option value="newest">{t('browse.newest')}</option>
+            <option value="oldest">{t('browse.oldest')}</option>
+            <option value="price_asc">{t('browse.priceLowHigh')}</option>
+            <option value="price_desc">{t('browse.priceHighLow')}</option>
           </select>
         </div>
       </div>
@@ -147,30 +149,30 @@ function BrowseContent() {
         <aside className={`${filterOpen ? 'block' : 'hidden'} sm:block w-full sm:w-56 flex-shrink-0`}>
           <div className="card p-5 space-y-5 sm:sticky sm:top-24">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm text-gray-900">Filters</h3>
-              {hasFilters && <button onClick={reset} className="text-xs text-blue-600 hover:underline font-medium">Clear all</button>}
+              <h3 className="font-semibold text-sm text-gray-900">{t('browse.filters')}</h3>
+              {hasFilters && <button onClick={reset} className="text-xs text-blue-600 hover:underline font-medium">{t('browse.clearAll')}</button>}
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('listing.category')}</label>
               {['', ...CATEGORIES].map((cat) => (
                 <button key={cat} onClick={() => setParam('category', cat)}
                   className={`w-full text-left text-sm px-3 py-2 rounded-xl transition-colors ${category === cat ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}>
-                  {cat || 'All Categories'}
+                  {cat || t('home.allCategories')}
                 </button>
               ))}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Condition</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('listing.condition')}</label>
               <select value={condition} onChange={(e) => setParam('condition', e.target.value)} className="input text-sm">
-                <option value="">Any Condition</option>
+                <option value="">{t('browse.anyCondition')}</option>
                 {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Price Range (USD)</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('browse.priceRange')}</label>
               <div className="flex items-center gap-2">
                 <input type="number" placeholder="Min" className="input text-sm" value={minPrice}
                   onChange={(e) => setParam('minPrice', e.target.value)} />
@@ -181,14 +183,14 @@ function BrowseContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Location</label>
-              <input type="text" placeholder="City, region..." className="input text-sm" value={location}
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('listing.location')}</label>
+              <input type="text" placeholder={t('browse.locationPlaceholder')} className="input text-sm" value={location}
                 onChange={(e) => setParam('location', e.target.value)} />
             </div>
 
             {user && savedSearches.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">🔔 Saved Searches</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">🔔 {t('browse.savedSearches')}</label>
                 <div className="space-y-1">
                   {savedSearches.map((s) => (
                     <div key={s.id} className="flex items-center gap-1.5 group">
@@ -220,9 +222,9 @@ function BrowseContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="font-semibold text-gray-700">No listings found</p>
-              <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
-              <button onClick={reset} className="btn-secondary mt-4 text-sm">Clear filters</button>
+              <p className="font-semibold text-gray-700">{t('browse.noListings')}</p>
+              <p className="text-gray-400 text-sm mt-1">{t('browse.tryAdjusting')}</p>
+              <button onClick={reset} className="btn-secondary mt-4 text-sm">{t('browse.clearFilters')}</button>
             </div>
           ) : (
             <>

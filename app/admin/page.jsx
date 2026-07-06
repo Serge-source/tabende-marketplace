@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { LANGUAGES } from '@/lib/i18n';
 
 // --- Inline SVG chart helpers ---
 
@@ -131,6 +132,40 @@ export default function AdminPage() {
     setData((prev) => prev.map((u) => u.id === id ? { ...u, ...body } : u));
   };
 
+  // Translation overrides management
+  const [trLocale, setTrLocale] = useState('pap');
+  const [trOverrides, setTrOverrides] = useState({});
+  const [trKey, setTrKey] = useState('');
+  const [trValue, setTrValue] = useState('');
+  const [trMsg, setTrMsg] = useState('');
+
+  useEffect(() => {
+    if (tab !== 'translations') return;
+    fetch(`/api/translations?locale=${trLocale}`).then((r) => r.json())
+      .then((d) => setTrOverrides(d.overrides || {}));
+  }, [tab, trLocale]);
+
+  const saveTranslation = async () => {
+    setTrMsg('');
+    const res = await fetch('/api/translations', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale: trLocale, key: trKey, value: trValue }),
+    });
+    const d = await res.json();
+    if (!res.ok) { setTrMsg(d.error || 'Failed'); return; }
+    setTrOverrides((prev) => ({ ...prev, [d.key]: d.value }));
+    setTrKey(''); setTrValue('');
+    setTrMsg('Saved — users see it on their next page load.');
+  };
+
+  const deleteTranslation = async (key) => {
+    await fetch('/api/translations', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale: trLocale, key }),
+    });
+    setTrOverrides((prev) => { const n = { ...prev }; delete n[key]; return n; });
+  };
+
   const refundOrder = async (report) => {
     if (!window.confirm(`Refund $${report.order.amount.toLocaleString()} to the buyer and resolve this dispute?`)) return;
     const res = await fetch(`/api/admin/orders/${report.order.id}/refund`, {
@@ -197,7 +232,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-0.5 border-b border-gray-200 mb-6">
-        {[{ key: 'listings', label: 'Moderation' }, { key: 'users', label: 'Users' }, { key: 'reports', label: 'Reports' }].map((t) => (
+        {[{ key: 'listings', label: 'Moderation' }, { key: 'users', label: 'Users' }, { key: 'reports', label: 'Reports' }, { key: 'translations', label: 'Translations' }].map((t) => (
           <button key={t.key} onClick={() => { setTab(t.key); setData([]); setLoading(true); setPage(1); setSearch(''); setSearchInput(''); }}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${tab === t.key ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
             {t.label}
@@ -205,7 +240,7 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {tab !== 'reports' && (
+      {tab !== 'reports' && tab !== 'translations' && (
         <form onSubmit={(e) => { e.preventDefault(); setPage(1); setSearch(searchInput.trim()); }} className="flex gap-2 mb-5 max-w-md">
           <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
             placeholder={tab === 'users' ? 'Search by name or email...' : 'Search by title, seller name or email...'}
@@ -221,7 +256,41 @@ export default function AdminPage() {
         <p className="text-xs text-gray-400 mb-3">{total.toLocaleString()} result{total === 1 ? '' : 's'}{search ? ` for “${search}”` : ''}</p>
       )}
 
-      {loading ? (
+      {tab === 'translations' && (
+        <div className="space-y-5">
+          <div className="card p-5">
+            <div className="flex items-center gap-3 flex-wrap mb-4">
+              <label className="text-sm font-semibold text-gray-700">Locale:</label>
+              <select value={trLocale} onChange={(e) => setTrLocale(e.target.value)} className="input w-auto text-sm">
+                {Object.entries(LANGUAGES).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+              </select>
+              <span className="text-xs text-gray-400">Overrides take priority over the built-in locale files — no code change or deploy needed.</span>
+            </div>
+            {trMsg && <p className="text-sm text-emerald-600 mb-3">{trMsg}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-2">
+              <input className="input text-sm font-mono" placeholder="key, e.g. dashboard.title"
+                value={trKey} onChange={(e) => setTrKey(e.target.value)} />
+              <input className="input text-sm" placeholder="Translated text"
+                value={trValue} onChange={(e) => setTrValue(e.target.value)} />
+              <button onClick={saveTranslation} disabled={!trKey.trim() || !trValue.trim()} className="btn-primary text-sm">Save</button>
+            </div>
+          </div>
+          <div className="card divide-y divide-gray-50">
+            {Object.keys(trOverrides).length === 0 ? (
+              <p className="p-8 text-center text-sm text-gray-400">No overrides for this locale yet. The built-in translations apply.</p>
+            ) : Object.entries(trOverrides).map(([key, value]) => (
+              <div key={key} className="flex items-center gap-3 px-5 py-3">
+                <code className="text-xs text-gray-500 flex-shrink-0 w-56 truncate">{key}</code>
+                <span className="text-sm text-gray-800 flex-1 truncate">{value}</span>
+                <button onClick={() => { setTrKey(key); setTrValue(value); }} className="text-xs text-gray-400 hover:text-gray-700">Edit</button>
+                <button onClick={() => deleteTranslation(key)} className="text-xs text-red-400 hover:text-red-600">Delete</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab !== 'translations' && (loading ? (
         <div className="flex justify-center py-16"><svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg></div>
       ) : (
         <div className="space-y-3">
@@ -316,7 +385,7 @@ export default function AdminPage() {
             </div>
           )}
         </div>
-      )}
+      ))}
     </div>
   );
 }

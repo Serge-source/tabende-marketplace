@@ -1,6 +1,9 @@
+'use client';
 import Link from 'next/link';
+import { useT } from './I18nProvider';
 
 export default function Footer() {
+  const t = useT();
   return (
     <footer className="bg-white border-t border-gray-100 mt-auto">
       <div className="section py-10">
@@ -14,36 +17,36 @@ export default function Footer() {
               </div>
               <span className="font-extrabold text-gray-900">Ta Bende Bon</span>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">The trusted marketplace for buying and selling goods locally and online.</p>
+            <p className="text-xs text-gray-500 leading-relaxed">{t('footer.tagline')}</p>
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">Marketplace</h4>
+            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">{t('footer.marketplace')}</h4>
             <ul className="space-y-2">
-              {[['Browse Listings', '/browse'], ['Sell an Item', '/listings/new'], ['How it Works', '/how-it-works']].map(([l, h]) => (
+              {[[t('footer.browseListings'), '/browse'], [t('footer.sellAnItem'), '/listings/new'], [t('footer.howItWorks'), '/how-it-works']].map(([l, h]) => (
                 <li key={l}><Link href={h} className="text-xs text-gray-500 hover:text-gray-900 transition-colors">{l}</Link></li>
               ))}
             </ul>
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">Account</h4>
+            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">{t('footer.account')}</h4>
             <ul className="space-y-2">
-              {[['Sign Up', '/register'], ['Log In', '/login'], ['Dashboard', '/dashboard'], ['Messages', '/messages']].map(([l, h]) => (
+              {[[t('footer.signUp'), '/register'], [t('nav.logIn'), '/login'], [t('nav.dashboard'), '/dashboard'], [t('nav.messages'), '/messages']].map(([l, h]) => (
                 <li key={l}><Link href={h} className="text-xs text-gray-500 hover:text-gray-900 transition-colors">{l}</Link></li>
               ))}
             </ul>
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">Support</h4>
+            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">{t('footer.support')}</h4>
             <ul className="space-y-2">
-              {[['Help Center', '/support'], ['Terms of Service', '/terms'], ['Privacy Policy', '/privacy'], ['Contact Us', '/support']].map(([l, h]) => (
+              {[[t('footer.helpCenter'), '/support'], [t('auth.terms'), '/terms'], [t('auth.privacy'), '/privacy'], [t('footer.contactUs'), '/support']].map(([l, h]) => (
                 <li key={l}><Link href={h} className="text-xs text-gray-500 hover:text-gray-900 transition-colors">{l}</Link></li>
               ))}
             </ul>
           </div>
         </div>
         <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Ta Bende Bon. All rights reserved.</p>
-          <p className="text-xs text-gray-400">Payments secured by Pay.aw</p>
+          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Ta Bende Bon. {t('footer.rights')}</p>
+          <p className="text-xs text-gray-400">{t('footer.payments')}</p>
         </div>
       </div>
     </footer>

@@ -4,11 +4,13 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { useCurrency } from '@/components/CurrencyProvider';
+import { useT } from '@/components/I18nProvider';
 
 export default function ListingDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const { format } = useCurrency();
+  const t = useT();
   const router = useRouter();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -171,7 +173,7 @@ export default function ListingDetailPage() {
 
           <div className="flex flex-wrap gap-2">
             <span className="badge bg-gray-100 text-gray-700 py-1 px-3">{listing.category}</span>
-            <span className="badge bg-blue-50 text-blue-700 py-1 px-3">Condition: {listing.condition}</span>
+            <span className="badge bg-blue-50 text-blue-700 py-1 px-3">{t('listing.condition')}: {listing.condition}</span>
             {listing.location && <span className="badge bg-gray-100 text-gray-600 py-1 px-3 flex items-center gap-1">
               <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               {listing.location}
@@ -195,32 +197,32 @@ export default function ListingDetailPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleBuy} disabled={buyLoading} className="btn-primary py-4 flex-1 text-base font-bold rounded-2xl">
                   {buyLoading ? 'Redirecting to checkout...'
-                    : myOffer?.status === 'ACCEPTED' ? `🛒 Buy for ${format(myOffer.amount)}` : '🛒 Buy Now'}
+                    : myOffer?.status === 'ACCEPTED' ? `🛒 ${t('listing.buyNow')} — ${format(myOffer.amount)}` : `🛒 ${t('listing.buyNow')}`}
                 </button>
                 {!myOffer && (
                   <button
                     onClick={() => { if (!user) return router.push(`/login?from=/listings/${id}`); setOfferOpen(true); }}
                     className="py-4 flex-1 text-base font-semibold rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
-                    💰 Make an Offer
+                    💰 {t('listing.makeOffer')}
                   </button>
                 )}
                 <button onClick={handleMessage} disabled={msgLoading} className="btn-secondary py-4 flex-1 text-base rounded-2xl flex items-center justify-center gap-2">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                  {msgLoading ? 'Opening chat...' : 'Message Seller'}
+                  {msgLoading ? '...' : t('listing.messageSeller')}
                 </button>
               </div>
             </>
           )}
           {!isAvailable && !isSeller && (
-            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-center text-sm text-gray-500 font-medium">This item is no longer available</div>
+            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-center text-sm text-gray-500 font-medium">{t('listing.noLongerAvailable')}</div>
           )}
           {isSeller && (
-            <Link href={`/listings/${id}/edit`} className="btn-secondary py-3 text-center rounded-2xl">Edit Listing</Link>
+            <Link href={`/listings/${id}/edit`} className="btn-secondary py-3 text-center rounded-2xl">{t('listing.editListing')}</Link>
           )}
 
           {/* Description */}
           <div className="card p-5">
-            <h3 className="font-semibold text-gray-900 mb-2.5">Description</h3>
+            <h3 className="font-semibold text-gray-900 mb-2.5">{t('listing.description')}</h3>
             <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{listing.description}</p>
           </div>
 
@@ -228,13 +230,13 @@ export default function ListingDetailPage() {
           {user && !isSeller && (
             <button onClick={() => setReportOpen(true)} className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1 transition-colors">
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>
-              Report this listing
+              {t('listing.reportListing')}
             </button>
           )}
 
           {/* Seller card */}
           <div className="card p-5">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Seller</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('dashboard.seller')}</h3>
             <Link href={`/profile/${listing.seller.id}`} className="flex items-center gap-3 group">
               {listing.seller.avatar ? (
                 <img src={listing.seller.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
@@ -247,7 +249,7 @@ export default function ListingDetailPage() {
                   {listing.seller.isVerified && <svg className="h-4 w-4 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
                 </div>
                 {avgRating && <div className="flex items-center gap-1 text-sm"><span className="text-amber-400">★</span><span className="font-medium">{avgRating}</span><span className="text-gray-400">({listing.seller.reviewsReceived.length})</span></div>}
-                <p className="text-xs text-gray-400">{listing.seller._count?.listings || 0} listings · {listing.seller._count?.sales || 0} sales</p>
+                <p className="text-xs text-gray-400">{listing.seller._count?.listings || 0} {t('listing.listings')} · {listing.seller._count?.sales || 0} {t('listing.sales')}</p>
               </div>
               <svg className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </Link>
@@ -259,7 +261,7 @@ export default function ListingDetailPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="card p-6 w-full max-w-sm">
             <h3 className="font-bold text-gray-900 mb-1">Make an offer</h3>
-            <p className="text-sm text-gray-500 mb-4">Asking price: <span className="font-semibold text-gray-700">{format(listing.price)}</span> · offers expire after 48 hours</p>
+            <p className="text-sm text-gray-500 mb-4">{t('listing.askingPrice')}: <span className="font-semibold text-gray-700">{format(listing.price)}</span> · offers expire after 48 hours</p>
             {offerError && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{offerError}</div>}
             <div className="relative mb-4">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
@@ -278,9 +280,9 @@ export default function ListingDetailPage() {
             </div>
             <div className="flex gap-2">
               <button onClick={submitOffer} disabled={offerLoading || !offerAmount} className="btn-primary flex-1">
-                {offerLoading ? 'Sending...' : 'Send Offer'}
+                {offerLoading ? '...' : t('listing.sendOffer')}
               </button>
-              <button onClick={() => { setOfferOpen(false); setOfferError(''); }} className="btn-secondary flex-1">Cancel</button>
+              <button onClick={() => { setOfferOpen(false); setOfferError(''); }} className="btn-secondary flex-1">{t('buttons.cancel')}</button>
             </div>
           </div>
         </div>
@@ -314,7 +316,7 @@ export default function ListingDetailPage() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={submitReport} className="btn-danger flex-1 text-sm">Submit Report</button>
-                  <button onClick={() => setReportOpen(false)} className="btn-secondary flex-1 text-sm">Cancel</button>
+                  <button onClick={() => setReportOpen(false)} className="btn-secondary flex-1 text-sm">{t('buttons.cancel')}</button>
                 </div>
               </>
             )}

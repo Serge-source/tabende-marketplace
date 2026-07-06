@@ -4,10 +4,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import ListingCard from '@/components/ListingCard';
+import { useT } from '@/components/I18nProvider';
 
 export default function ProfilePage() {
   const { id } = useParams();
   const { user, updateUser, refetch } = useAuth();
+  const t = useT();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -168,7 +170,7 @@ export default function ProfilePage() {
                 <input className="input text-lg font-bold" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
                 <textarea rows={2} className="input resize-none" placeholder="Tell buyers about yourself..." value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} />
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block font-medium">Account type</label>
+                  <label className="text-xs text-gray-500 mb-1 block font-medium">{t('profile.accountType')}</label>
                   <select className="input w-auto text-sm" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
                     <option value="BUYER">Buyer</option>
                     <option value="SELLER">Seller</option>
@@ -189,17 +191,17 @@ export default function ProfilePage() {
                 {avgRating && <div className="flex items-center gap-1.5 mt-1.5"><span className="text-amber-400">★</span><span className="font-semibold text-sm">{avgRating}</span><span className="text-gray-400 text-sm">({profile.reviewsReceived.length} reviews)</span></div>}
                 {profile.bio && <p className="text-gray-600 text-sm mt-2 leading-relaxed">{profile.bio}</p>}
                 <div className="flex gap-4 mt-3 text-sm text-gray-400">
-                  <span><span className="font-semibold text-gray-700">{profile._count?.listings || 0}</span> listings</span>
-                  <span><span className="font-semibold text-gray-700">{profile._count?.sales || 0}</span> sales</span>
-                  <span>Joined {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                  <span><span className="font-semibold text-gray-700">{profile._count?.listings || 0}</span> {t('listing.listings')}</span>
+                  <span><span className="font-semibold text-gray-700">{profile._count?.sales || 0}</span> {t('listing.sales')}</span>
+                  <span>{t('profile.joined')} {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
                 </div>
-                {isOwn && <button onClick={() => setEditing(true)} className="btn-secondary text-sm mt-3">Edit Profile</button>}
+                {isOwn && <button onClick={() => setEditing(true)} className="btn-secondary text-sm mt-3">{t('profile.editProfile')}</button>}
                 {!isOwn && user && (
                   <button onClick={toggleBlock}
                     className={`text-sm mt-3 px-4 py-2 rounded-xl border font-medium transition-colors ${blocked
                       ? 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                       : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}>
-                    {blocked ? 'Unblock User' : 'Block User'}
+                    {blocked ? t('profile.unblockUser') : t('profile.blockUser')}
                   </button>
                 )}
               </>
@@ -213,7 +215,7 @@ export default function ProfilePage() {
         <div className="card p-6 mb-6">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h2 className="text-base font-bold text-gray-900">Invite Friends, Earn Credit</h2>
+              <h2 className="text-base font-bold text-gray-900">{t('profile.inviteFriends')}</h2>
               <p className="text-sm text-gray-500 mt-0.5">Get <span className="font-semibold text-emerald-600">$5 credit</span> when someone you invite makes their first purchase. Credit is applied automatically at checkout.</p>
             </div>
             <div className="text-right">
@@ -225,7 +227,7 @@ export default function ProfilePage() {
             <input readOnly value={referral.link} className="input text-sm flex-1 font-mono text-gray-600"
               onFocus={(e) => e.target.select()} />
             <button onClick={copyLink} className="btn-primary text-sm px-4 flex-shrink-0">
-              {copied ? '✓ Copied' : 'Copy Link'}
+              {copied ? `✓ ${t('profile.copied')}` : t('profile.copyLink')}
             </button>
           </div>
         </div>
@@ -234,20 +236,20 @@ export default function ProfilePage() {
       {/* Change password — own profile only */}
       {isOwn && (
         <div className="card p-6 mb-6">
-          <h2 className="text-base font-bold text-gray-900">Change Password</h2>
+          <h2 className="text-base font-bold text-gray-900">{t('profile.changePassword')}</h2>
           <p className="text-sm text-gray-500 mt-0.5 mb-4">Use at least 8 characters. You&apos;ll stay signed in after changing it.</p>
           {pwMsg && <p className={`text-sm mb-4 ${pwMsg.includes('success') ? 'text-emerald-600' : 'text-red-600'}`}>{pwMsg}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-            <input type="password" autoComplete="current-password" placeholder="Current password" className="input text-sm"
+            <input type="password" autoComplete="current-password" placeholder={t('profile.currentPassword')} className="input text-sm"
               value={pwForm.current} onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))} />
-            <input type="password" autoComplete="new-password" placeholder="New password" className="input text-sm"
+            <input type="password" autoComplete="new-password" placeholder={t('profile.newPassword')} className="input text-sm"
               value={pwForm.next} onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))} />
-            <input type="password" autoComplete="new-password" placeholder="Confirm new password" className="input text-sm"
+            <input type="password" autoComplete="new-password" placeholder={t('profile.confirmPassword')} className="input text-sm"
               value={pwForm.confirm} onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))} />
           </div>
           <button onClick={changePassword} disabled={pwSaving || !pwForm.current || pwForm.next.length < 8 || !pwForm.confirm}
             className="btn-primary text-sm">
-            {pwSaving ? 'Saving...' : 'Update Password'}
+            {pwSaving ? t('buttons.saving') : t('profile.updatePassword')}
           </button>
         </div>
       )}
@@ -257,18 +259,18 @@ export default function ProfilePage() {
         <div className="card p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-base font-bold text-gray-900">Two-Factor Authentication</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Add an extra layer of security to your account</p>
+              <h2 className="text-base font-bold text-gray-900">{t('profile.twoFactor')}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{t('profile.twoFactorHint')}</p>
             </div>
             <span className={`badge text-xs ${mfaEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-              {mfaEnabled ? '✓ Enabled' : 'Disabled'}
+              {mfaEnabled ? `✓ ${t('profile.enabled')}` : t('profile.disabled')}
             </span>
           </div>
 
           {mfaMsg && <p className={`text-sm mb-4 ${mfaMsg.includes('success') || mfaMsg.includes('disabled') ? 'text-emerald-600' : 'text-red-600'}`}>{mfaMsg}</p>}
 
           {!mfaEnabled && !mfaSetup && (
-            <button onClick={startMfaSetup} className="btn-primary text-sm">Enable 2FA</button>
+            <button onClick={startMfaSetup} className="btn-primary text-sm">{t('profile.enable2fa')}</button>
           )}
 
           {mfaSetup && (
@@ -294,7 +296,7 @@ export default function ProfilePage() {
                   className="input w-44 font-mono text-center tracking-widest" value={mfaDisableToken}
                   onChange={(e) => setMfaDisableToken(e.target.value.replace(/\D/g, '').slice(0, 6))} />
                 <button onClick={disableMfa} disabled={mfaDisableToken.length < 6} className="text-sm px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-medium transition-colors">
-                  Disable 2FA
+                  {t('profile.disable2fa')}
                 </button>
               </div>
             </div>
@@ -304,7 +306,7 @@ export default function ProfilePage() {
 
       {profile.listings?.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Active Listings</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('profile.activeListings')}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {profile.listings.map((l) => <ListingCard key={l.id} listing={l} />)}
           </div>
@@ -313,7 +315,7 @@ export default function ProfilePage() {
 
       {profile.reviewsReceived?.length > 0 && (
         <div>
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Reviews</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('profile.reviews')}</h2>
           <div className="space-y-3">
             {profile.reviewsReceived.map((r) => (
               <div key={r.id} className="card p-4 flex gap-3">

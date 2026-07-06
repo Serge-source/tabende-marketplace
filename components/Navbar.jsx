@@ -5,16 +5,19 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import { useTheme } from './ThemeProvider';
 import { useCurrency, CURRENCIES } from './CurrencyProvider';
+import { useT } from './I18nProvider';
+import LanguageSelector from './LanguageSelector';
 import { io } from 'socket.io-client';
 
 const NAV_LINKS = [
-  { href: '/browse', label: 'Browse' },
+  { href: '/browse', labelKey: 'nav.browse' },
 ];
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const { currency, setCurrency } = useCurrency();
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
   const [search, setSearch] = useState('');
@@ -107,7 +110,7 @@ export default function Navbar() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search listings..."
+                placeholder={t('nav.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
@@ -115,6 +118,7 @@ export default function Navbar() {
 
           {/* Desktop right */}
           <div className="hidden sm:flex items-center gap-2 ml-auto">
+            <LanguageSelector />
             <select value={currency} onChange={(e) => setCurrency(e.target.value)} aria-label="Currency"
               className="text-xs font-medium text-gray-600 bg-transparent border border-gray-200 rounded-xl px-2 py-1.5 cursor-pointer focus:outline-none dark:text-gray-300 dark:border-gray-700">
               {Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.label}</option>)}
@@ -127,7 +131,7 @@ export default function Navbar() {
             </button>
             {NAV_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname === l.href ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
-                {l.label}
+                {t(l.labelKey)}
               </Link>
             ))}
 
@@ -136,10 +140,10 @@ export default function Navbar() {
                 {(user.role === 'SELLER' || user.role === 'ADMIN') && (
                   <Link href="/listings/new" className="btn-primary text-sm">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-                    New Listing
+                    {t('nav.newListing')}
                   </Link>
                 )}
-                <Link href="/messages" className={`p-2 rounded-lg transition-colors ${pathname.startsWith('/messages') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`} aria-label="Messages">
+                <Link href="/messages" className={`p-2 rounded-lg transition-colors ${pathname.startsWith('/messages') ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`} aria-label={t('nav.messages')}>
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
@@ -149,7 +153,7 @@ export default function Navbar() {
                 <div className="relative" ref={notifRef}>
                   <button onClick={() => { setNotifOpen((o) => !o); if (!notifOpen) markAllRead(); }}
                     className="relative p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                    aria-label="Notifications">
+                    aria-label={t('nav.notifications')}>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
@@ -162,11 +166,11 @@ export default function Navbar() {
                   {notifOpen && (
                     <div className="absolute right-0 mt-2 w-80 card shadow-lg overflow-hidden">
                       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-900">Notifications</span>
+                        <span className="text-sm font-semibold text-gray-900">{t('nav.notifications')}</span>
                       </div>
                       <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
                         {notifications.length === 0 ? (
-                          <p className="text-sm text-gray-400 text-center py-8">No notifications yet</p>
+                          <p className="text-sm text-gray-400 text-center py-8">{t('nav.noNotifications')}</p>
                         ) : notifications.map((n) => (
                           <a key={n.id} href={n.href || '#'}
                             className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${!n.read ? 'bg-blue-50/50' : ''}`}>
@@ -200,10 +204,10 @@ export default function Navbar() {
                         <p className="text-xs text-gray-500 capitalize">{user.role.toLowerCase()}</p>
                       </div>
                       {[
-                        { href: '/dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z', label: 'Dashboard' },
-                        { href: `/profile/${user.id}`, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', label: 'My Profile' },
-                        { href: '/messages', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', label: 'Messages' },
-                        ...(user.role === 'ADMIN' ? [{ href: '/admin', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Admin Panel' }] : []),
+                        { href: '/dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z', label: t('nav.dashboard') },
+                        { href: `/profile/${user.id}`, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', label: t('nav.myProfile') },
+                        { href: '/messages', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', label: t('nav.messages') },
+                        ...(user.role === 'ADMIN' ? [{ href: '/admin', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: t('nav.adminPanel') }] : []),
                       ].map((item) => (
                         <Link key={item.href} href={item.href} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                           <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} /></svg>
@@ -213,7 +217,7 @@ export default function Navbar() {
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                          Sign Out
+                          {t('nav.signOut')}
                         </button>
                       </div>
                     </div>
@@ -222,8 +226,8 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex gap-2">
-                <Link href="/login" className="btn-secondary text-sm">Log In</Link>
-                <Link href="/register" className="btn-primary text-sm">Sign Up Free</Link>
+                <Link href="/login" className="btn-secondary text-sm">{t('nav.logIn')}</Link>
+                <Link href="/register" className="btn-primary text-sm">{t('nav.signUpFree')}</Link>
               </div>
             )}
           </div>
@@ -242,15 +246,16 @@ export default function Navbar() {
             <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search listings..." className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('nav.searchPlaceholder')} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
         </form>
 
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="sm:hidden border-t border-gray-100 py-2 space-y-0.5">
-            <Link href="/browse" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Browse</Link>
+            <Link href="/browse" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">{t('nav.browse')}</Link>
             <div className="px-3 py-2">
+              <LanguageSelector className="w-full !text-sm !px-3 !py-2 mb-2" />
               <select value={currency} onChange={(e) => setCurrency(e.target.value)} aria-label="Currency"
                 className="w-full text-sm text-gray-700 bg-transparent border border-gray-200 rounded-xl px-3 py-2">
                 {Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.label}</option>)}
@@ -258,17 +263,17 @@ export default function Navbar() {
             </div>
             {user ? (
               <>
-                {(user.role === 'SELLER' || user.role === 'ADMIN') && <Link href="/listings/new" className="block px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-xl">+ New Listing</Link>}
-                <Link href="/dashboard" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Dashboard</Link>
-                <Link href="/messages" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Messages</Link>
-                <Link href={`/profile/${user.id}`} className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Profile</Link>
-                {user.role === 'ADMIN' && <Link href="/admin" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Admin Panel</Link>}
-                <button onClick={handleLogout} className="block w-full text-left px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl">Sign Out</button>
+                {(user.role === 'SELLER' || user.role === 'ADMIN') && <Link href="/listings/new" className="block px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-xl">+ {t('nav.newListing')}</Link>}
+                <Link href="/dashboard" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">{t('nav.dashboard')}</Link>
+                <Link href="/messages" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">{t('nav.messages')}</Link>
+                <Link href={`/profile/${user.id}`} className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">{t('nav.myProfile')}</Link>
+                {user.role === 'ADMIN' && <Link href="/admin" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">{t('nav.adminPanel')}</Link>}
+                <button onClick={handleLogout} className="block w-full text-left px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl">{t('nav.signOut')}</button>
               </>
             ) : (
               <>
-                <Link href="/login" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Log In</Link>
-                <Link href="/register" className="block px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-xl">Sign Up Free</Link>
+                <Link href="/login" className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl">{t('nav.logIn')}</Link>
+                <Link href="/register" className="block px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-xl">{t('nav.signUpFree')}</Link>
               </>
             )}
           </div>

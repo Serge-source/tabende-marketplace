@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { useCurrency } from '@/components/CurrencyProvider';
+import { useT } from '@/components/I18nProvider';
 
 const SHIP_STEPS = ['ORDER_PLACED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 const SHIP_LABELS = { ORDER_PLACED: 'Order Placed', SHIPPED: 'Shipped', OUT_FOR_DELIVERY: 'Out for Delivery', DELIVERED: 'Delivered' };
@@ -27,6 +28,7 @@ function ShippingTracker({ status }) {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { format } = useCurrency();
+  const t = useT();
   const [tab, setTab] = useState('orders');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,23 +91,23 @@ export default function DashboardPage() {
   if (!user) return null;
 
   const tabs = [
-    ...(user.role !== 'BUYER' ? [{ key: 'listings', label: 'My Listings' }] : []),
-    { key: 'orders', label: 'Orders' },
-    ...(user.role !== 'BUYER' ? [{ key: 'sales', label: 'Sales' }, { key: 'analytics', label: 'Analytics' }] : []),
-    { key: 'favorites', label: 'Saved' },
+    ...(user.role !== 'BUYER' ? [{ key: 'listings', label: t('dashboard.myListings') }] : []),
+    { key: 'orders', label: t('dashboard.orders') },
+    ...(user.role !== 'BUYER' ? [{ key: 'sales', label: t('dashboard.sales') }, { key: 'analytics', label: t('dashboard.analytics') }] : []),
+    { key: 'favorites', label: t('dashboard.saved') },
   ];
 
   return (
     <div className="section py-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">Welcome back, <span className="font-medium text-gray-700">{user.name}</span></p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+          <p className="text-sm text-gray-500">{t('dashboard.welcomeMessage')}, <span className="font-medium text-gray-700">{user.name}</span></p>
         </div>
         {user.role !== 'BUYER' && (
           <Link href="/listings/new" className="btn-primary">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-            New Listing
+            {t('dashboard.newListing')}
           </Link>
         )}
       </div>
@@ -124,12 +126,12 @@ export default function DashboardPage() {
         <div className="flex justify-center py-16"><svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg></div>
       ) : (Array.isArray(data) && data.length === 0) ? (
         <div className="card p-12 text-center">
-          <p className="text-gray-500 font-medium">Nothing here yet</p>
+          <p className="text-gray-500 font-medium">{t('dashboard.nothingHere')}</p>
           <p className="text-gray-400 text-sm mt-1">
-            {tab === 'listings' ? 'Create your first listing to start selling' : tab === 'orders' ? 'Browse listings to make your first purchase' : 'Items you save will appear here'}
+            {tab === 'listings' ? t('dashboard.createFirst') : tab === 'orders' ? t('dashboard.browseFirst') : t('dashboard.savedAppear')}
           </p>
-          {tab === 'listings' && <Link href="/listings/new" className="btn-primary mt-4 inline-flex">Create Listing</Link>}
-          {tab === 'orders' && <Link href="/browse" className="btn-primary mt-4 inline-flex">Browse</Link>}
+          {tab === 'listings' && <Link href="/listings/new" className="btn-primary mt-4 inline-flex">{t('dashboard.createListing')}</Link>}
+          {tab === 'orders' && <Link href="/browse" className="btn-primary mt-4 inline-flex">{t('dashboard.browse')}</Link>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -146,9 +148,9 @@ export default function DashboardPage() {
                   {l.isBoosted && <span className="badge text-xs bg-amber-50 text-amber-700">★ Boosted</span>}
                   <span className="text-xs text-gray-400 flex items-center gap-1"><svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>{l._count?.favorites || 0}</span>
                   {l.status === 'ACTIVE' && (() => {
-                    if (!l.expiresAt) return <span className="text-xs text-gray-400">No expiry</span>;
+                    if (!l.expiresAt) return <span className="text-xs text-gray-400">{t('dashboard.noExpiry')}</span>;
                     const daysLeft = Math.ceil((new Date(l.expiresAt) - Date.now()) / (1000 * 60 * 60 * 24));
-                    if (daysLeft <= 0) return <span className="text-xs text-red-500 font-medium">Expired</span>;
+                    if (daysLeft <= 0) return <span className="text-xs text-red-500 font-medium">{t('dashboard.expired')}</span>;
                     if (daysLeft <= 7) return <span className="text-xs text-red-500 font-medium">Expires in {daysLeft}d</span>;
                     if (daysLeft <= 14) return <span className="text-xs text-orange-500">Expires in {daysLeft}d</span>;
                     return <span className="text-xs text-gray-400">Expires {new Date(l.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>;
@@ -160,7 +162,7 @@ export default function DashboardPage() {
                   <button onClick={async () => {
                     const res = await fetch(`/api/listings/${l.id}/relist`, { method: 'POST' });
                     if (res.ok) setData((prev) => prev.map((x) => x.id === l.id ? { ...x, status: 'ACTIVE', expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() } : x));
-                  }} className="btn-secondary text-xs px-3 py-1.5">Relist</button>
+                  }} className="btn-secondary text-xs px-3 py-1.5">{t('dashboard.relist')}</button>
                 )}
                 {l.status === 'ACTIVE' && !l.isBoosted && (
                   <button onClick={async () => {
@@ -169,7 +171,7 @@ export default function DashboardPage() {
                     if (d.url) window.location.href = d.url;
                   }} className="text-xs px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 font-medium transition-colors">★ Boost $5</button>
                 )}
-                <Link href={`/listings/${l.id}/edit`} className="btn-secondary text-xs px-3 py-1.5">Edit</Link>
+                <Link href={`/listings/${l.id}/edit`} className="btn-secondary text-xs px-3 py-1.5">{t('dashboard.edit')}</Link>
               </div>
             </div>
           ))}
@@ -182,7 +184,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link href={`/listings/${o.listing?.id}`} className="font-semibold text-gray-900 hover:text-blue-600 block truncate">{o.listing?.title}</Link>
-                  <p className="text-xs text-gray-500 mt-0.5">Seller: <span className="font-medium">{o.seller?.name}</span></p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t('dashboard.seller')}: <span className="font-medium">{o.seller?.name}</span></p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="font-bold text-blue-600">{format(o.amount)}</span>
                     <span className={`badge text-xs ${o.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{o.status}</span>
@@ -192,17 +194,17 @@ export default function DashboardPage() {
                   {o.status === 'PENDING' && (
                     <button onClick={() => cancelOrder(o.id, 'Cancel this order?')} disabled={actionBusy === o.id}
                       className="text-xs px-3 py-1.5 rounded-lg bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 font-medium">
-                      Cancel Order
+                      {t('dashboard.cancelOrder')}
                     </button>
                   )}
                   {o.status === 'PAID' && !o.review && (
-                    <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5">Rate Seller</button>
+                    <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5">{t('dashboard.rateSeller')}</button>
                   )}
                   {o.review && <div className="flex items-center gap-0.5"><span className="text-amber-400 text-sm">{'★'.repeat(o.review.rating)}</span></div>}
                   {o.status === 'PAID' && (
                     <button onClick={() => setDisputeOrder(o)}
                       className="text-xs text-gray-400 hover:text-red-500 transition-colors">
-                      Report a problem
+                      {t('dashboard.reportProblem')}
                     </button>
                   )}
                 </div>
@@ -210,7 +212,7 @@ export default function DashboardPage() {
               {o.status === 'PAID' && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Shipping</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('dashboard.shipping')}</p>
                     <span className="text-xs text-blue-600 font-medium">{SHIP_LABELS[o.shippingStatus]}</span>
                   </div>
                   <ShippingTracker status={o.shippingStatus} />
@@ -227,7 +229,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 truncate">{o.listing?.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Buyer: <span className="font-medium">{o.buyer?.name}</span></p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t('dashboard.buyer')}: <span className="font-medium">{o.buyer?.name}</span></p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="font-bold text-emerald-600">+{format(o.amount)}</span>
                     <span className={`badge text-xs ${o.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{o.status}</span>
@@ -239,7 +241,7 @@ export default function DashboardPage() {
                       {SHIP_STEPS.map((s) => <option key={s} value={s}>{SHIP_LABELS[s]}</option>)}
                     </select>
                     {!o.review && (
-                      <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5">Rate Buyer</button>
+                      <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5">{t('dashboard.rateBuyer')}</button>
                     )}
                     {o.review && <span className="text-amber-400 text-sm">{'★'.repeat(o.review.rating)}</span>}
                     {o.shippingStatus === 'ORDER_PLACED' && (
@@ -255,7 +257,7 @@ export default function DashboardPage() {
               </div>
               {o.status === 'PAID' && o.shippingAddress && (
                 <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Ship to</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('dashboard.shipTo')}</p>
                   <p className="text-sm text-gray-700">
                     {[o.shippingAddress.name, o.shippingAddress.line1, o.shippingAddress.line2,
                       [o.shippingAddress.city, o.shippingAddress.state, o.shippingAddress.postal_code].filter(Boolean).join(', '),

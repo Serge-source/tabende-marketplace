@@ -3,9 +3,11 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { useT } from '@/components/I18nProvider';
 
 function LoginForm() {
   const { login } = useAuth();
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const from = params.get('from') || '/dashboard';
@@ -55,8 +57,8 @@ function LoginForm() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={mfaRequired ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'} />
             </svg>
           </div>
-          <h1 className="text-2xl font-extrabold text-gray-900">{mfaRequired ? 'Two-factor authentication' : 'Welcome back'}</h1>
-          <p className="text-gray-500 mt-1 text-sm">{mfaRequired ? 'Enter the 6-digit code from your authenticator app' : 'Sign in to your Ta Bende Bon account'}</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">{mfaRequired ? t('auth.mfaTitle') : t('auth.welcomeBack')}</h1>
+          <p className="text-gray-500 mt-1 text-sm">{mfaRequired ? t('auth.mfaSubtitle') : t('auth.signInSubtitle')}</p>
         </div>
         <div className="card p-8">
           {error && <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
@@ -67,14 +69,14 @@ function LoginForm() {
             {!mfaRequired ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.email')}</label>
                   <input type="email" required autoComplete="email" className="input" placeholder="you@example.com"
                     value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
-                    <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">Forgot password?</Link>
+                    <label className="block text-sm font-medium text-gray-700">{t('auth.password')}</label>
+                    <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">{t('auth.forgotPassword')}</Link>
                   </div>
                   <input type="password" required autoComplete="current-password" className="input" placeholder="••••••••"
                     value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
@@ -91,20 +93,20 @@ function LoginForm() {
             )}
             <button type="submit" disabled={loading || (mfaRequired && mfaToken.length < 6)} className="btn-primary w-full py-3 text-base mt-2">
               {loading
-                ? <span className="flex items-center gap-2 justify-center"><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Signing in...</span>
-                : mfaRequired ? 'Verify Code' : 'Sign In'}
+                ? <span className="flex items-center gap-2 justify-center"><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>{t('auth.signingIn')}</span>
+                : mfaRequired ? t('auth.verifyCode') : t('auth.signIn')}
             </button>
             {mfaRequired && (
               <button type="button" onClick={() => { setMfaRequired(false); setMfaToken(''); setError(''); }}
                 className="w-full text-center text-sm text-gray-500 hover:text-gray-700">
-                ← Back to login
+                ← {t('auth.backToLogin')}
               </button>
             )}
           </form>
           {!mfaRequired && (
             <p className="text-center text-sm text-gray-500 mt-5">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-blue-600 font-semibold hover:underline">Sign up free</Link>
+              {t('auth.noAccount')}{' '}
+              <Link href="/register" className="text-blue-600 font-semibold hover:underline">{t('auth.signUpLink')}</Link>
             </p>
           )}
         </div>

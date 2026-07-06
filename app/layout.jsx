@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import Script from 'next/script';
 import ServiceWorker from '@/components/ServiceWorker';
 import { CurrencyProvider } from '@/components/CurrencyProvider';
+import { I18nProvider } from '@/components/I18nProvider';
 
 export const metadata = {
   title: { default: 'Ta Bende Bon', template: '%s | Ta Bende Bon' },
@@ -57,6 +58,7 @@ export default function RootLayout({ children }) {
           Skip to main content
         </a>
         <ThemeProvider>
+          <I18nProvider>
           <CurrencyProvider>
           <AuthProvider>
             <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
@@ -66,6 +68,7 @@ export default function RootLayout({ children }) {
             </div>
           </AuthProvider>
           </CurrencyProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

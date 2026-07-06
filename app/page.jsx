@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ListingCard from '@/components/ListingCard';
+import { useT } from '@/components/I18nProvider';
 
 const CATEGORIES = [
   { name: 'Electronics', icon: '💻' },
@@ -16,6 +17,7 @@ const CATEGORIES = [
 ];
 
 export default function HomePage() {
+  const t = useT();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -48,26 +50,26 @@ export default function HomePage() {
         {/* Content */}
         <div className="flex-1 min-w-0 lg:max-w-[560px]">
           <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold mb-5" style={{ background: '#E8F0E4', color: '#7F9B6D' }}>
-            Buy &amp; Sell Locally
+            {t('home.badge')}
           </span>
           <h1 className="text-4xl sm:text-5xl xl:text-[54px] font-extrabold leading-[1.1] mb-5" style={{ color: '#2D2D2D' }}>
-            Find Great Deals<br />Near You
+            {t('home.heroTitle1')}<br />{t('home.heroTitle2')}
           </h1>
           <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: '#6B6B6B' }}>
-            Discover second-hand items, local services, and unique products from people in your community. Sell what you no longer need and connect safely with trusted buyers.
+            {t('home.heroText')}
           </p>
           <div className="flex flex-wrap gap-3 mb-8">
             <Link href="/browse" className="px-7 py-3.5 rounded-xl font-bold text-base text-white transition-opacity hover:opacity-90" style={{ background: '#7F9B6D' }}>
-              Start Browsing
+              {t('home.startBrowsing')}
             </Link>
             <Link href="/listings/new" className="px-7 py-3.5 rounded-xl font-bold text-base border transition-colors hover:bg-blue-50" style={{ background: 'transparent', color: '#2D2D2D', border: '2px solid #D9D3CC' }}>
-              Sell an Item
+              {t('home.sellAnItem')}
             </Link>
           </div>
           <form onSubmit={handleSearch} className="flex gap-2.5 p-3 rounded-2xl max-w-xl" style={{ background: 'white', boxShadow: '0 12px 30px rgba(0,0,0,0.08)' }}>
             <input
               type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search phones, furniture, cars..."
+              placeholder={t('home.searchPlaceholder')}
               className="flex-1 min-w-0 px-3 py-3 rounded-xl text-gray-900 text-base focus:outline-none border"
               style={{ borderColor: '#D9D3CC' }}
             />
@@ -76,11 +78,11 @@ export default function HomePage() {
               className="hidden sm:block text-gray-600 text-sm px-3 py-3 rounded-xl focus:outline-none border flex-shrink-0"
               style={{ borderColor: '#D9D3CC' }}
             >
-              <option value="">All Categories</option>
+              <option value="">{t('home.allCategories')}</option>
               {CATEGORIES.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
             </select>
             <button type="submit" className="text-white font-bold px-5 py-3 rounded-xl text-base transition-opacity hover:opacity-90 flex-shrink-0" style={{ background: '#7F9B6D' }}>
-              Search
+              {t('home.search')}
             </button>
           </form>
         </div>
@@ -106,7 +108,7 @@ export default function HomePage() {
       <section className="bg-white border-b border-gray-100">
         <div className="section py-5">
           <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center max-w-lg mx-auto">
-            {[['10K+', 'Active Listings'], ['5K+', 'Happy Sellers'], ['99%', 'Secure Payments']].map(([val, label]) => (
+            {[['10K+', t('home.statListings')], ['5K+', t('home.statSellers')], ['99%', t('home.statPayments')]].map(([val, label]) => (
               <div key={label}>
                 <p className="text-xl sm:text-2xl font-extrabold text-blue-600">{val}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{label}</p>
@@ -118,7 +120,7 @@ export default function HomePage() {
 
       {/* Categories */}
       <section className="section py-12">
-        <h2 className="text-xl font-bold text-gray-900 mb-5">Shop by Category</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-5">{t('home.shopByCategory')}</h2>
         <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
           {CATEGORIES.map((cat) => (
             <Link key={cat.name} href={`/browse?category=${encodeURIComponent(cat.name)}`}
@@ -135,9 +137,9 @@ export default function HomePage() {
         <section className="section pb-12">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-amber-400">★</span> Featured Listings
+              <span className="text-amber-400">★</span> {t('home.featuredListings')}
             </h2>
-            <Link href="/browse" className="text-sm text-blue-600 font-medium hover:underline">See all →</Link>
+            <Link href="/browse" className="text-sm text-blue-600 font-medium hover:underline">{t('home.seeAll')} →</Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {featured.map((l) => <ListingCard key={l.id} listing={l} />)}
@@ -148,8 +150,8 @@ export default function HomePage() {
       {/* Recent */}
       <section className="section pb-16">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-bold text-gray-900">Recently Listed</h2>
-          <Link href="/browse" className="text-sm text-blue-600 font-medium hover:underline">View all →</Link>
+          <h2 className="text-xl font-bold text-gray-900">{t('home.recentlyListed')}</h2>
+          <Link href="/browse" className="text-sm text-blue-600 font-medium hover:underline">{t('home.viewAll')} →</Link>
         </div>
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -173,14 +175,14 @@ export default function HomePage() {
       {/* CTA */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">Ready to start selling?</h2>
-          <p className="text-blue-100 text-lg mb-8">Join thousands of sellers already earning on Ta Bende Bon. List your first item in minutes.</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">{t('home.ctaTitle')}</h2>
+          <p className="text-blue-100 text-lg mb-8">{t('home.ctaText')}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/register" className="bg-white text-blue-700 font-bold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors shadow-lg text-base">
-              Get Started Free
+              {t('home.getStarted')}
             </Link>
             <Link href="/browse" className="border-2 border-white/40 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-white/10 transition-colors text-base">
-              Browse Listings
+              {t('home.browseListings')}
             </Link>
           </div>
         </div>

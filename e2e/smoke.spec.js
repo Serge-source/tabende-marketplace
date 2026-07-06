@@ -6,6 +6,11 @@ const listingTitle = `E2E Test Widget ${stamp}`;
 
 test.describe.configure({ mode: 'serial' });
 
+// The platform defaults to Papiamento; this suite asserts English strings
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('lang', 'en'));
+});
+
 test('home page renders', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Find Great Deals/i })).toBeVisible();

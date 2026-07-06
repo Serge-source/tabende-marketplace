@@ -3,9 +3,11 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { useT } from '@/components/I18nProvider';
 
 function RegisterForm() {
   const { login } = useAuth();
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const referralCode = params.get('ref') || null;
@@ -45,11 +47,11 @@ function RegisterForm() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Create your account</h1>
-          <p className="text-gray-500 mt-1 text-sm">Join thousands of buyers and sellers</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">{t('auth.createAccount')}</h1>
+          <p className="text-gray-500 mt-1 text-sm">{t('auth.createSubtitle')}</p>
           {referralCode && (
             <p className="mt-3 inline-block px-4 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">
-              🎁 You were invited by a friend
+              🎁 {t('auth.invitedByFriend')}
             </p>
           )}
         </div>
@@ -60,26 +62,26 @@ function RegisterForm() {
           </div>}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.fullName')}</label>
               <input type="text" required className="input" placeholder="John Doe"
                 value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.email')}</label>
               <input type="email" required className="input" placeholder="you@example.com"
                 value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <input type="password" required className="input" placeholder="Min. 6 characters"
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.password')}</label>
+              <input type="password" required className="input" placeholder={t('auth.passwordMin')}
                 value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">I want to</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('auth.iWantTo')}</label>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { role: 'BUYER', label: 'Buy Items', desc: 'Browse & purchase listings', emoji: '🛍️' },
-                  { role: 'SELLER', label: 'Sell Items', desc: 'List & sell products', emoji: '💰' },
+                  { role: 'BUYER', label: t('auth.buyItems'), desc: t('auth.buyItemsDesc'), emoji: '🛍️' },
+                  { role: 'SELLER', label: t('auth.sellItems'), desc: t('auth.sellItemsDesc'), emoji: '💰' },
                 ].map((opt) => (
                   <button key={opt.role} type="button" onClick={() => setForm((f) => ({ ...f, role: opt.role }))}
                     className={`p-4 rounded-2xl border-2 text-left transition-all duration-150 ${form.role === opt.role ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
@@ -93,18 +95,18 @@ function RegisterForm() {
             <label className="flex items-start gap-2.5 mt-2 cursor-pointer">
               <input type="checkbox" required className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-xs text-gray-500 leading-relaxed">
-                I agree to the <Link href="/terms" className="text-blue-600 hover:underline" target="_blank">Terms of Service</Link> and <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank">Privacy Policy</Link>
+                {t('auth.agreeTo')} <Link href="/terms" className="text-blue-600 hover:underline" target="_blank">{t('auth.terms')}</Link> {t('auth.and')} <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank">{t('auth.privacy')}</Link>
               </span>
             </label>
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base mt-2">
               {loading ? (
-                <span className="flex items-center gap-2"><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Creating account...</span>
-              ) : 'Create Account'}
+                <span className="flex items-center gap-2"><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>{t('auth.creatingAccount')}</span>
+              ) : t('auth.createAccountBtn')}
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-5">
-            Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 font-semibold hover:underline">Sign in</Link>
+            {t('auth.haveAccount')}{' '}
+            <Link href="/login" className="text-blue-600 font-semibold hover:underline">{t('auth.signInLink')}</Link>
           </p>
         </div>
       </div>

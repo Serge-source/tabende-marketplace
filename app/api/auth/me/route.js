@@ -7,7 +7,7 @@ export async function GET(request) {
   if (error) return error;
   const me = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { id: true, name: true, email: true, role: true, avatar: true, bio: true, isVerified: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, avatar: true, bio: true, isVerified: true, createdAt: true, language: true },
   });
   if (!me) {
     const gone = NextResponse.json({ error: 'Account not found' }, { status: 401 });

@@ -23,6 +23,7 @@ model User {
   resetPasswordExpires DateTime?
   mfaSecret            String?
   mfaEnabled           Boolean   @default(false)
+  language             String    @default("pap")
   referralCode         String?   @unique
   referredById         String?
   creditBalance        Float     @default(0)
@@ -274,6 +275,17 @@ enum OfferStatus {
   COUNTERED
   CANCELLED
   EXPIRED
+}
+
+model Translation {
+  id        String   @id @default(cuid())
+  locale    String
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([locale, key])
+  @@index([locale])
 }
 
 model BlockedUser {
