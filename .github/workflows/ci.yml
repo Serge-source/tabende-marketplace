@@ -52,3 +52,16 @@ jobs:
         env:
           DATABASE_URL: postgresql://placeholder/placeholder
           JWT_SECRET: ci-placeholder-secret-not-used-at-runtime
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests
+        run: |
+          NODE_ENV=production node server.js &
+          npx wait-on http://localhost:3000 --timeout 60000 || sleep 15
+          npx playwright test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          JWT_SECRET: ci-e2e-secret
+          PORT: 3000
