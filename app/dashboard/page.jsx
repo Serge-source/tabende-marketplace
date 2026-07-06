@@ -236,6 +236,10 @@ export default function DashboardPage() {
                     <select value={o.shippingStatus} onChange={(e) => updateShipping(o.id, e.target.value)} className="input text-xs w-auto py-1.5">
                       {SHIP_STEPS.map((s) => <option key={s} value={s}>{SHIP_LABELS[s]}</option>)}
                     </select>
+                    {!o.review && (
+                      <button onClick={() => setReviewOrder(o)} className="btn-secondary text-xs px-3 py-1.5">Rate Buyer</button>
+                    )}
+                    {o.review && <span className="text-amber-400 text-sm">{'★'.repeat(o.review.rating)}</span>}
                     {o.shippingStatus === 'ORDER_PLACED' && (
                       <button
                         onClick={() => cancelOrder(o.id, `Cancel this sale and refund the buyer $${o.amount.toLocaleString()}? The listing will be reactivated.`)}
@@ -364,7 +368,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="card p-6 w-full max-w-sm">
             <h3 className="font-bold text-gray-900 mb-1">Rate your experience</h3>
-            <p className="text-sm text-gray-500 mb-4">How was your purchase from <span className="font-medium">{reviewOrder.seller?.name}</span>?</p>
+            <p className="text-sm text-gray-500 mb-4">How was your experience with <span className="font-medium">{reviewOrder.seller?.name || reviewOrder.buyer?.name}</span>?</p>
             <div className="flex gap-1 mb-4">
               {[1,2,3,4,5].map((n) => (
                 <button key={n} onClick={() => setReviewForm((f) => ({ ...f, rating: n }))} className={`text-3xl transition-transform hover:scale-110 ${n <= reviewForm.rating ? 'text-amber-400' : 'text-gray-200'}`}>★</button>

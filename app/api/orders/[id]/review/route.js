@@ -14,23 +14,27 @@ export async function POST(request, { params }) {
 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (order.buyerId !== user.id) return NextResponse.json({ error: 'Only buyer can review' }, { status: 403 });
+  const isBuyer = order.buyerId === user.id;
+  const isSeller = order.sellerId === user.id;
+  if (!isBuyer && !isSeller) return NextResponse.json({ error: 'Only the buyer or seller can review this order' }, { status: 403 });
   if (order.status !== 'PAID') return NextResponse.json({ error: 'Order must be paid' }, { status: 400 });
+
+  const revieweeId = isBuyer ? order.sellerId : order.buyerId;
 
   try {
     const review = await prisma.review.create({
-      data: { orderId: order.id, reviewerId: user.id, revieweeId: order.sellerId, rating, comment },
+      data: { orderId: order.id, reviewerId: user.id, revieweeId, rating, comment },
     });
 
-    const seller = await prisma.user.findUnique({ where: { id: order.sellerId }, select: { id: true, name: true, email: true } });
-    if (seller) {
-      createNotification(seller.id, {
+    const reviewee = await prisma.user.findUnique({ where: { id: revieweeId }, select: { id: true, name: true, email: true } });
+    if (reviewee) {
+      createNotification(reviewee.id, {
         type: 'NEW_REVIEW',
         title: `New ${rating}-star review`,
         body: comment ? comment.slice(0, 80) : `You received a ${rating}-star rating.`,
-        href: `/profile/${seller.id}`,
+        href: `/profile/${reviewee.id}`,
       }).catch(console.error);
-      sendReviewEmail(seller, { name: user.name }, rating).catch(console.error);
+      sendReviewEmail(reviewee, { name: user.name }, rating).catch(console.error);
     }
 
     return NextResponse.json(review, { status: 201 });

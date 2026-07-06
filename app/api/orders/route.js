@@ -11,9 +11,12 @@ export async function GET(request) {
     include: {
       listing: { select: { id: true, title: true, images: true } },
       seller: { select: { id: true, name: true, avatar: true } },
-      review: true,
+      reviews: true,
     },
     orderBy: { createdAt: 'desc' },
   });
-  return NextResponse.json(orders);
+  return NextResponse.json(orders.map(({ reviews, ...o }) => ({
+    ...o,
+    review: reviews.find((r) => r.reviewerId === user.id) || null,
+  })));
 }
