@@ -35,17 +35,17 @@ test('create a listing and find it on browse', async ({ page }) => {
   await page.goto('/listings/new');
   await page.getByRole('button', { name: /Continue to Details/i }).click();
   await page.getByPlaceholder('What are you selling?').fill(listingTitle);
-  await page.locator('textarea').fill('An automated end-to-end test listing. Safe to ignore.');
+  await page.locator('main textarea').fill('An automated end-to-end test listing. Safe to ignore.');
   await page.getByPlaceholder('0.00').fill('42');
-  await page.locator('select').nth(0).selectOption('Electronics');
-  await page.locator('select').nth(1).selectOption('Good');
+  await page.locator('main select').nth(0).selectOption('Electronics');
+  await page.locator('main select').nth(1).selectOption('Good');
   await page.getByRole('button', { name: /Preview Listing/i }).click();
   await page.getByRole('button', { name: 'Publish Listing' }).click();
   await page.waitForURL(/\/listings\/(?!new)/, { timeout: 15000 });
 
   // detail page shows the listing
   await expect(page.getByRole('heading', { name: listingTitle })).toBeVisible();
-  await expect(page.getByText('$42')).toBeVisible();
+  await expect(page.getByText('Afl. 42')).toBeVisible();
 
   // search finds it on browse
   await page.goto(`/browse?search=${encodeURIComponent(listingTitle)}`);
