@@ -51,7 +51,7 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: postgresql://placeholder/placeholder
-          JWT_SECRET: ci-placeholder-secret-not-used-at-runtime
+          JWT_SECRET: ci-e2e-secret
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
