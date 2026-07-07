@@ -78,9 +78,9 @@ export default function ListingCard({ listing }) {
         {listing.seller && (
           <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-50 mt-auto">
             {listing.seller.avatar ? (
-              <img src={listing.seller.avatar} alt="" className="w-4.5 h-4.5 rounded-full object-cover" />
+              <img src={listing.seller.avatar} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
             ) : (
-              <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-[10px] font-bold">
+              <div className="w-5 h-5 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 text-[10px] font-bold">
                 {listing.seller.name?.[0]}
               </div>
             )}
