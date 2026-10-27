@@ -8,17 +8,24 @@ import ServiceWorker from '@/components/ServiceWorker';
 import { CurrencyProvider } from '@/components/CurrencyProvider';
 import { I18nProvider } from '@/components/I18nProvider';
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tabendebon.com';
+
 export const metadata = {
+  metadataBase: new URL(APP_URL),
   title: { default: 'Ta Bende Bon', template: '%s | Ta Bende Bon' },
   description: 'Buy and sell with confidence — the trusted C2C marketplace for electronics, clothing, vehicles, and more.',
-  keywords: ['marketplace', 'buy', 'sell', 'second hand', 'used items', 'classifieds'],
+  keywords: ['marketplace', 'buy', 'sell', 'second hand', 'used items', 'classifieds', 'Aruba', 'Curaçao', 'Caribbean'],
+  alternates: { canonical: APP_URL },
   openGraph: {
     title: 'Ta Bende Bon',
-    description: 'Buy and sell with confidence',
+    description: 'Buy and sell with confidence — the trusted C2C marketplace for electronics, clothing, vehicles, and more.',
     type: 'website',
+    url: APP_URL,
     siteName: 'Ta Bende Bon',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Ta Bende Bon marketplace' }],
+    locale: 'nl_AW',
   },
-  twitter: { card: 'summary_large_image' },
+  twitter: { card: 'summary_large_image', title: 'Ta Bende Bon', description: 'Buy and sell locally — find great deals.' },
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Ta Bende Bon' },
   icons: {

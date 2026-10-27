@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 
 export default async function sitemap() {
-  const base = process.env.NEXT_PUBLIC_APP_URL || 'https://tabende-marketplace-production.up.railway.app';
+  const base = process.env.NEXT_PUBLIC_APP_URL || 'https://tabendebon.com';
 
   const staticRoutes = ['', '/browse', '/login', '/register', '/support'].map((path) => ({
     url: `${base}${path}`,
