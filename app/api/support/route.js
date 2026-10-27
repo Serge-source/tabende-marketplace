@@ -14,17 +14,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
-    // Log to console (SendGrid integration optional — same pattern as other emails)
     console.log('[Support Request]', { name, email, subject, message: message.slice(0, 200) });
 
-    // If SendGrid is configured, send the support email
-    if (process.env.SENDGRID_API_KEY) {
-      const sgMail = (await import('@sendgrid/mail')).default;
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      await sgMail.send({
-        to: process.env.SUPPORT_EMAIL || 'support@tabende.com',
-        from: process.env.FROM_EMAIL || 'noreply@tabende.com',
-        replyTo: email,
+    if (process.env.RESEND_API_KEY) {
+      const { Resend } = await import('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'noreply@tabendebon.com',
+        to: process.env.SUPPORT_EMAIL || 'support@tabendebon.com',
+        reply_to: email,
         subject: `[Ta Bende Bon Support] ${subject}`,
         text: `From: ${name} <${email}>\nSubject: ${subject}\n\n${message}`,
       });
